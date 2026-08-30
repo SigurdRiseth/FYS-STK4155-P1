@@ -1,0 +1,67 @@
+[project]
+name = "fys-stk4155-p0"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "Sigurd Riseth", email = "sigurd.riseth@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.2",
+    "pandas>=3.0.5",
+    "scikit-learn>=1.9.0",
+]
+
+[project.scripts]
+fys-stk4155-p0 = "fys_stk4155_p0:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "mypy>=2.3.1",
+    "nbstripout>=0.9.1",
+    "pre-commit>=4.6.2",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.4",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "NPY", # numpy-specific rules
+    "PD",  # pandas-vet
+]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "tests"]
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=fys_stk4155_p0 --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
