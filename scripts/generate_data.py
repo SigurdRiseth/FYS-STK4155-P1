@@ -19,7 +19,7 @@ def main() -> None:
     parser.add_argument("--n", type=int, default=100, help="number of sample points")
     parser.add_argument("--noise", type=float, default=0.1, help="Gaussian noise std")
     parser.add_argument("--seed", type=int, default=42, help="RNG seed")
-    parser.add_argument("--out", type=Path, default=DATA_DIR / "franke.npz")
+    parser.add_argument("--out", type=Path, default=DATA_DIR / "runge.npz")
     args = parser.parse_args()
 
     x, y = generate_runge_data(args.n, args.noise, args.seed)
