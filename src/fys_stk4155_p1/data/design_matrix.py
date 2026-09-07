@@ -41,6 +41,9 @@ def bivariate_polynomial_design_matrix(
         Design matrix of shape (n, (degree + 1) * (degree + 2) / 2).
     """
     cols = [
-        x**i * y**j for total in range(degree + 1) for i in range(total + 1) for j in [total - i]
+        x**i * y**j
+        for total in range(degree + 1)
+        for i in range(total, -1, -1)
+        for j in [total - i]
     ]
     return np.column_stack(cols)
