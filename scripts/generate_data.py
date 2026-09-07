@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from fys_stk4155_p1.runge import generate_runge_data
+from fys_stk4155_p1.data.runge import generate_runge_data
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 
