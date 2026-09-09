@@ -7,20 +7,24 @@ from numpy.typing import NDArray
 def univariate_polynomial_design_matrix(
     x: NDArray[np.float64],
     degree: int,
+    intercept: bool = True,
 ) -> NDArray[np.float64]:
     """Build a univariate polynomial design matrix.
 
-    Columns are 1, x, x^2, ..., x^degree. Column 0 is the all-ones
-    intercept term.
+    Columns are 1, x, x^2, ..., x^degree when intercept=True,
+    and x, x^2, ..., x^degree when intercept=False.
 
     Args:
         x: x-coordinates, shape (n,).
         degree: highest degree to include.
+        intercept: Whether to include an all-ones intercept column.
 
     Returns:
-        Design matrix of shape (n, degree + 1).
+        Design matrix of shape (n, degree + 1) when intercept=True,
+        or (n, degree) when intercept=False.
     """
-    return np.column_stack([x**i for i in range(degree + 1)])
+    start = 0 if intercept else 1
+    return np.column_stack([x**i for i in range(start, degree + 1)])
 
 
 def bivariate_polynomial_design_matrix(
