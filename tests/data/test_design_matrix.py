@@ -42,3 +42,10 @@ def test_bivariate_design_matrix_matches_explicit_monomials() -> None:
     # ordered by increasing total degree: [1, x, y, x^2, xy, y^2]
     expected = np.column_stack([np.ones(2), x, y, x**2, x * y, y**2])
     np.testing.assert_allclose(X, expected)
+
+
+def test_univariate_design_matrix_no_intercept() -> None:
+    x = np.array([2.0, 3.0])
+    X = univariate_polynomial_design_matrix(x, degree=2, intercept=False)
+    expected = np.array([[2.0, 4.0], [3.0, 9.0]])
+    np.testing.assert_allclose(X, expected)
