@@ -1,7 +1,7 @@
 [project]
 name = "fys-stk4155-p1"
 version = "0.1.0"
-description = "Add your description here"
+description = "Regression on the Runge function with OLS, Ridge, and Lasso (FYS-STK4155 Project 1)"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 authors = [
