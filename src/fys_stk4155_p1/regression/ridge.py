@@ -21,6 +21,8 @@ class Ridge(LinearModel):
     """
 
     def __init__(self, lam: float, fit_intercept_column: bool = False) -> None:
+        # TODO: discover whether it should be n*lam for cross-validation as it
+        # should be a penalty *per observation* (ref. Section 3.10 of the lecture notes)
         self.lam = lam
         self.fit_intercept_column = fit_intercept_column
 

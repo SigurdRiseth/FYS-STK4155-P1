@@ -34,4 +34,4 @@ def r2_score(y_true: NDArray[np.float64], y_pred: NDArray[np.float64]) -> np.flo
     y_pred = np.asarray(y_pred, dtype=np.float64)
     residual_sum_squares = np.sum((y_true - y_pred) ** 2)
     total_sum_squares = np.sum((y_true - np.mean(y_true)) ** 2)
-    return 1.0 - residual_sum_squares / total_sum_squares
+    return np.float64(1.0 - residual_sum_squares / total_sum_squares)
