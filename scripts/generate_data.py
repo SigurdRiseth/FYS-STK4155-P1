@@ -23,7 +23,7 @@ def _save_runge_data_figure(x: NDArray[np.float64], y: NDArray[np.float64], nois
 
     x_plot = np.linspace(-1, 1, 500)
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots()
     ax.plot(
         x_plot,
         runge_function(x_plot),

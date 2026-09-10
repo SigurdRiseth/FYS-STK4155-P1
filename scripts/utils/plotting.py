@@ -14,8 +14,17 @@ from matplotlib.figure import Figure
 
 FIGURE_DIR = Path(__file__).resolve().parents[2] / "docs" / "figures"
 
+# Standard figure sizes (inches), so labels/legends come out the same size
+# after every figure is scaled to the same \includegraphics width in the
+# report. FIGSIZE_SINGLE is the default (applied via rcParams below); pass
+# FIGSIZE_WIDE explicitly only for plots that need extra width, e.g. a
+# legend placed outside the axes.
+FIGSIZE_SINGLE = (7.0, 4.0)
+FIGSIZE_WIDE = (8.0, 5.0)
+
 _RC_PARAMS = {
     # Figure and output
+    "figure.figsize": FIGSIZE_SINGLE,
     "figure.dpi": 120,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
