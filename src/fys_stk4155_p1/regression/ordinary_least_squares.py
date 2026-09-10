@@ -18,7 +18,7 @@ class OLS(LinearModel):
 
     LLM-assisted
     ------------
-    Tool: Claude Sonnet 4.8 (September 2026)
+    Tool: Claude Opus 4.8 (September 2026)
     Role: Suggested the rcond parameter and singular-value cutoff logic for the SVD-based
         pseudoinverse.
     Modifications: Integrated the suggestion into the existing OLS implementation and verified the
@@ -46,7 +46,7 @@ class OLS(LinearModel):
         if rcond is None:
             rcond = np.finfo(np.float64).eps * max(X.shape)
 
-        # LLM-assisted: Claude Sonnet 4.8 (September 2026) suggested the
+        # LLM-assisted: Claude Opus 4.8 (September 2026) suggested the
         # singular-value cutoff and pseudoinverse handling below.
         cutoff = rcond * s[0] if s.size else 0.0
         s_inv = np.where(s > cutoff, 1.0 / s, 0.0)
