@@ -9,8 +9,9 @@ from fys_stk4155_p1.regression.base import LinearModel
 class Ridge(LinearModel):
     """Ridge regression via the normal equations.
 
-    Solves (X^T X + lam * I) theta = X^T y for theta. The ridge term makes
-    the system well-conditioned, so np.linalg.solve is used rather than the
+    Minimizes (1/n) ||y - X theta||^2 + lam * ||theta||^2. Its normal equations are
+    (X^T X + n * lam * I) theta = X^T y; the ridge term makes the system
+    well-conditioned, so np.linalg.solve is used rather than the
     pseudoinverse.
 
     Args:
@@ -21,8 +22,6 @@ class Ridge(LinearModel):
     """
 
     def __init__(self, lam: float, fit_intercept_column: bool = False) -> None:
-        # TODO: discover whether it should be n*lam for cross-validation as it
-        # should be a penalty *per observation* (ref. Section 3.10 of the lecture notes)
         self.lam = lam
         self.fit_intercept_column = fit_intercept_column
 
@@ -40,10 +39,10 @@ class Ridge(LinearModel):
         if self.lam < 0:
             raise ValueError(f"lam must be non-negative, got {self.lam}.")
 
-        n_features = X.shape[1]
+        n_samples, n_features = X.shape
         penalty = np.eye(n_features)
         if self.fit_intercept_column:
             penalty[0, 0] = 0.0  # don't shrink the intercept
 
-        self.coef_ = np.linalg.solve(X.T @ X + self.lam * penalty, X.T @ y)
+        self.coef_ = np.linalg.solve(X.T @ X + n_samples * self.lam * penalty, X.T @ y)
         return self
