@@ -29,3 +29,8 @@ htmlcov/
 data/*
 !data/.gitkeep
 !data/README.md
+
+# Generated report figures (never commit; regenerate via scripts/, see
+# docs/figures/README.md)
+docs/figures/*
+!docs/figures/README.md
