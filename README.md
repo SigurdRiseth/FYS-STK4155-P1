@@ -1,4 +1,4 @@
-# FYS-STK4155-P0
+# Project 1 -- FYS-STK4155
 
 > Template repository for academic ML projects (FYS-STK4155 and similar).
 > Replace this description with the project's own.
