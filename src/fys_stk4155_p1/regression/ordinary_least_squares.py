@@ -1,5 +1,7 @@
 """Ordinary least squares regression."""
 
+from typing import Self
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -28,7 +30,7 @@ class OLS(LinearModel):
     def __init__(self, rcond: float | None = None) -> None:
         self.rcond = rcond
 
-    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> "OLS":
+    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> Self:
         """Fit theta by least squares.
 
         Args:

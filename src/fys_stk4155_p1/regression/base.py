@@ -1,6 +1,7 @@
 """Shared estimator interface for the linear regression models."""
 
 from abc import ABC, abstractmethod
+from typing import Self
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,7 +20,7 @@ class LinearModel(ABC):
     coef_: NDArray[np.float64]
 
     @abstractmethod
-    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> "LinearModel":
+    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> Self:
         """Fit the model to (X, y) and return self."""
 
     def predict(self, X: NDArray[np.float64]) -> NDArray[np.float64]:
