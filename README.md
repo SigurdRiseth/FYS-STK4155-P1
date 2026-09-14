@@ -1,13 +1,20 @@
 # Project 1 -- FYS-STK4155
 
-> Template repository for academic ML projects (FYS-STK4155 and similar).
-> Replace this description with the project's own.
+Regression on the Runge function using OLS, Ridge, and LASSO with bivariate
+polynomial design matrices, evaluated with bootstrap and cross-validation
+resampling. Coursework for FYS-STK4155 at UiO.
+
+> **Status:** work in progress — report and results sections below are not
+> written up yet.
 
 ## Project structure
 
 ```
 .
-├── src/fys_stk4155_p0/   # importable package — all reusable logic lives here
+├── src/fys_stk4155_p1/   # importable package — all reusable logic lives here
+│   ├── data/             # Runge sampling + polynomial design matrices
+│   ├── regression/       # OLS, Ridge, LASSO
+│   └── resampling/       # bootstrap, cross-validation
 ├── tests/                # pytest test suite, mirrors src/ structure
 ├── scripts/              # thin runnable entry points (data download, experiments)
 ├── notebooks/            # exploratory Jupyter notebooks (outputs stripped on commit)
