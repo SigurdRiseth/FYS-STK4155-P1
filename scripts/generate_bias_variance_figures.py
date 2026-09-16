@@ -4,7 +4,7 @@ the bootstrap bias^2/variance decomposition of test MSE vs. polynomial degree,
 and how that decomposition shifts with dataset size and noise level.
 
 Usage:
-    uv run python scripts/generate_bias_variance_figures.py [--degree-max 13]
+    uv run python scripts/generate_bias_variance_figures.py [--degree-max 15]
         [--n 100] [--noise 0.1] [--seed 42] [--n-bootstraps 100]
         [--n-values 50 100 200 400] [--noise-values 0.1 0.2 0.4 0.8]
         [--out-subdir bias_variance]
@@ -101,7 +101,7 @@ def plot_bias_variance_by_noise(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--degree-max", type=int, default=13, help="highest polynomial degree")
+    parser.add_argument("--degree-max", type=int, default=15, help="highest polynomial degree")
     parser.add_argument("--n", type=int, default=100, help="number of sample points")
     parser.add_argument("--noise", type=float, default=0.1, help="Gaussian noise std")
     parser.add_argument("--seed", type=int, default=42, help="RNG / train-test-split seed")
