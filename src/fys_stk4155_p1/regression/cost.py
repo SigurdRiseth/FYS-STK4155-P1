@@ -73,8 +73,40 @@ def analytical_gradient(
     return 2 / n * X.T @ (X @ theta - y) + 2 * lam * penalty_theta
 
 
-def hessian_max_eigenvalue(X, lam=0.0, fit_intercept_column=False) -> np.float64:
+def hessian_max_eigenvalue(
+    X: NDArray[np.float64], lam: float = 0.0, fit_intercept_column: bool = False
+) -> np.float64:
     """Largest eigenvalue of (2/n) X^T X (+ 2*lam*I), via np.linalg.eigvalsh.
+
+    The intercept row/column of the penalty term is zeroed out when
+    fit_intercept_column is True, mirroring ridge.Ridge.fit's penalty
+    matrix.
+
+    This matches Eq. (4.17) from Hjorth-Jensen, which is also
+    analytical_gradient's linear (in theta) coefficient: differentiating
+    (2/n) X^T (X theta - y) + 2*lam*theta once more with respect to theta
+    gives this Hessian.
+
     Plain GD is stable for learning_rate < 2 / hessian_max_eigenvalue(...);
-    used by the figure script to annotate the stability sweep for part E."""
-    pass
+    used by the figure script to annotate the stability sweep for part E.
+
+    Args:
+        X: Feature matrix, shape (n_samples, n_features).
+        lam: L2 regularization strength. Defaults to 0.0.
+        fit_intercept_column: Whether the first column of X/theta is an
+            intercept and should therefore be excluded from regularization.
+            Defaults to False.
+
+    Returns:
+        The largest eigenvalue of the cost's Hessian with respect to theta.
+    """
+    n_samples, n_features = X.shape
+
+    penalty = np.eye(n_features)
+    if fit_intercept_column:
+        penalty[0, 0] = 0.0
+
+    hessian = 2 / n_samples * X.T @ X + 2 * lam * penalty
+
+    # eigvalsh returns eigenvalues in ascending order for symmetric input.
+    return np.linalg.eigvalsh(hessian)[-1]
