@@ -1,3 +1,5 @@
+"""Cost, analytical gradient, and Hessian eigenvalue for OLS/Ridge, used by gradient descent."""
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -82,7 +84,7 @@ def hessian_max_eigenvalue(
     fit_intercept_column is True, mirroring ridge.Ridge.fit's penalty
     matrix.
 
-    This matches Eq. (4.17) from Hjorth-Jensen, which is also
+    This matches Eq. (4.17) from Hjorth-Jensen (2026), which is also
     analytical_gradient's linear (in theta) coefficient: differentiating
     (2/n) X^T (X theta - y) + 2*lam*theta once more with respect to theta
     gives this Hessian.
