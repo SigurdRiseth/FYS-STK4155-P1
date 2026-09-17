@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-class Optimizer(ABC):
+class Optimizer(ABC): # TODO: Consider adding a `decay` parameter for learning rate scheduling (ref. Géron Chapter 11)
     """Base class for gradient-based optimizers.
 
     Subclasses implement `step` to compute a parameter update from a
@@ -73,6 +73,10 @@ class Plain(Optimizer):
         """
         return theta - self.learning_rate * grad
 
+# TODO: Add Momentum
+# TODO: Add AdaGrad
+# TODO: Add RMSProp
+# TODO: Add Adam
 
 OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
     "plain": Plain,
