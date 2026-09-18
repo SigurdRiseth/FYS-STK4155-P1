@@ -52,7 +52,7 @@ class Plain(Optimizer):
     Hjorth-Jensen (2026).
     """
 
-    def reset(self, n_params: int) -> None:
+    def reset(self, n_params: int) -> None: # noqa: ARG002
         """No-op: plain gradient descent holds no internal state.
 
         Args:
