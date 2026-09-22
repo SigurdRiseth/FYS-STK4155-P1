@@ -1,8 +1,9 @@
 # Project 1 -- FYS-STK4155
 
 Regression on the Runge function using OLS, Ridge, and LASSO with bivariate
-polynomial design matrices, evaluated with bootstrap and cross-validation
-resampling. Coursework for FYS-STK4155 at UiO.
+polynomial design matrices, fit via both closed-form solutions and gradient-based
+optimization (GD, SGD, momentum, AdaGrad, RMSProp, Adam), and evaluated with
+bootstrap and cross-validation resampling. Coursework for FYS-STK4155 at UiO.
 
 > **Status:** work in progress — report and results sections below are not
 > written up yet.
@@ -13,7 +14,8 @@ resampling. Coursework for FYS-STK4155 at UiO.
 .
 ├── src/fys_stk4155_p1/   # importable package — all reusable logic lives here
 │   ├── data/             # Runge sampling + polynomial design matrices
-│   ├── regression/       # OLS, Ridge, LASSO
+│   ├── regression/       # OLS, Ridge, LASSO (closed-form + gradient descent)
+│   ├── optimization/     # optimizers (GD, SGD, Momentum, AdaGrad, RMSProp, Adam)
 │   └── resampling/       # bootstrap, cross-validation
 ├── tests/                # pytest test suite, mirrors src/ structure
 ├── scripts/              # thin runnable entry points (data download, experiments)
@@ -35,18 +37,7 @@ uv run pre-commit install  # enable git hooks (lint, format, nbstripout, mypy, g
 
 ## Development
 
-| Task | Command |
-|---|---|
-| Run tests (with coverage) | `make test` / `uv run pytest` |
-| Lint | `make lint` / `uv run ruff check .` |
-| Format | `make format` / `uv run ruff format .` |
-| Type check | `make typecheck` / `uv run mypy` |
-| Everything | `make check` |
-| Run all pre-commit hooks manually | `uv run pre-commit run --all-files` |
-
-CI (`.github/workflows/ci.yml`) runs `uv sync --locked` (fails if `uv.lock`
-is out of sync with `pyproject.toml`), all pre-commit hooks, and the test
-suite on every push and pull request.
+Run tests with `make test` / `uv run pytest`.
 
 ## Reproducibility
 
