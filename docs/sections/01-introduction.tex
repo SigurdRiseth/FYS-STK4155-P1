@@ -1,36 +1,42 @@
 \section{Introduction}\label{sec:introduction}
 
-% An introduction where you explain the aims and rationale for the physics case and
-% what you have done. At the end of the introduction you should give a brief summary
-% of the structure of the report
+% An introduction where you explain the aims and rationale for the physics case
+% and what you have done. At the end of the introduction you should give a brief
+% summary of the structure of the report
 
-% Introduction (~1 page). Motivation (why polynomials, why Runge, the high-degree
-% failure, bias–variance), then what you did for linear models, resampling and optimizers,
-% stating explicitly what is your own code and what is scikit-learn. It ends with a
-% paragraph on the report's structure and the repo link. No results, no MSE/
+% Introduction (~1 page). Motivation (why polynomials, why Runge, the
+% high-degree failure, bias–variance), then what you did for linear models,
+% resampling and optimizers, stating explicitly what is your own code and what
+% is scikit-learn. It ends with a paragraph on the report's structure and the
+% repo link. No results, no MSE/
 
-Fitting a function with a polynomial is the simplest nontrivial regression problem,
-and it is not a trivial one. The Weierstrass approximation theorem guarantees that any
-continuous function on a closed interval can be approximated uniformly to arbitrary
-accuracy by polynomials, but it says nothing about how to find such a polynomial from a
-finite set of noisy samples, or which degree to choose. Increasing the degree reduces
-the approximation error of the model class, yet it also makes the fitted coefficients
-increasingly sensitive to the particular data set. This tension is the bias--variance
-trade-off~\cite{hastieElementsStatisticalLearning2017, hjorth-jensenMachineLearningPhysical2026}.
-Its lessons carry over essentially unchanged to the more flexible models used elsewhere
-in machine learning, which makes polynomial regression a transparent laboratory for them.
+Fitting a function with a polynomial is the simplest nontrivial regression
+problem, and it is not a trivial one. The Weierstrass approximation theorem
+guarantees that any continuous function on a closed interval can be approximated
+uniformly to arbitrary accuracy by polynomials, but it says nothing about how to
+find such a polynomial from a finite set of noisy samples, or which degree to
+choose. Increasing the degree reduces the approximation error of the model
+class, yet it also makes the fitted coefficients increasingly sensitive to the
+particular data set. This tension is the bias--variance
+trade-off~\cite{hastieElementsStatisticalLearning2017,
+hjorth-jensenMachineLearningPhysical2026}. Its lessons carry over essentially
+unchanged to the more flexible models used elsewhere in machine learning, which
+makes polynomial regression a transparent laboratory for them.
 
 Runge's function,
 \begin{equation}\label{eq:runges_function}
   f(x) = \frac{1}{1+25x^2}, \qquad x\in[-1,1],
 \end{equation}
-is the classical example of how this can fail. Although $f$ is smooth, its polynomial
-interpolants on equispaced nodes diverge near the endpoints as the degree increases; this is
-Runge's phenomenon~\cite{rungeUeberEmpirischeFunktionen1901, demarchiPolynomialInterpolationMapped2020}. %verify runge1901
-Least-squares regression on noisy data is not interpolation, but it faces the same underlying
-difficulty in a statistical form. A high-degree fit on equispaced points is free to oscillate
-between the data, it fits the noise as readily as the signal, and the monomial design matrix
-becomes severely ill-conditioned. Runge's function therefore provides a demanding test of how
+is the classical example of how this can fail. Although $f$ is smooth, its
+polynomial interpolants on equispaced nodes diverge near the endpoints as the
+degree increases; this is Runge's
+phenomenon~\cite{rungeUeberEmpirischeFunktionen1901,
+demarchiPolynomialInterpolationMapped2020}. %verify runge1901
+Least-squares regression on noisy data is not interpolation, but it faces the
+same underlying difficulty in a statistical form. A high-degree fit on
+equispaced points is free to oscillate between the data, it fits the noise as
+readily as the signal, and the monomial design matrix becomes severely
+ill-conditioned. Runge's function therefore provides a demanding test of how
 model complexity should be selected and controlled.
 
 We study three linear models. Ordinary least squares (OLS) provides the unregularized baseline,
