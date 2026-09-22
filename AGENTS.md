@@ -39,7 +39,10 @@ suite, on every push to `main` and every PR.
 - `src/fys_stk4155_p1/` — the only place reusable/tested logic lives, split
   by concern: `data/` (Runge sampling, polynomial design matrix), `regression/`
   (shared `LinearModel` base, OLS, Ridge, Lasso (via `GradientDescent`,
-  `penalty="l1"` — no closed form), degree sweeps),
+  `penalty="l1"` — no closed form), degree sweeps), `optimization/`
+  (the `Optimizer` registry — plain/momentum/AdaGrad/RMSProp/Adam — and
+  learning-rate schedules; `GradientDescent` also supports mini-batch SGD via
+  `batch_size`/`n_epochs`, looping over epochs instead of full-batch steps),
   `resampling/` (bootstrap; cross-validation in progress), and `metrics.py`.
 - `scripts/` — thin CLI entry points that wire together `src/` logic
   (argparse + I/O only), e.g. `generate_data.py` (writes

@@ -4,6 +4,7 @@ import pytest
 from fys_stk4155_p1.regression.cost import (
     analytical_gradient,
     cost,
+    gradient_flops,
     hessian_max_eigenvalue,
     lasso_cost,
     lasso_subgradient,
@@ -424,6 +425,21 @@ def test_sklearn_alpha_to_lam_matches_sklearn_cost_convention():
     sklearn_style_cost = np.mean((y - X @ theta) ** 2) / 2 + alpha * np.sum(np.abs(theta))
 
     assert lasso_cost(X, y, theta, lam=lam) == pytest.approx(2 * sklearn_style_cost)
+
+
+def test_gradient_flops_formula():
+    assert gradient_flops(n_samples=10, n_features=3) == 4 * 10 * 3
+    assert gradient_flops(n_samples=1, n_features=9) == 4 * 1 * 9
+
+
+def test_gradient_flops_scales_linearly_in_each_argument():
+    base = gradient_flops(n_samples=10, n_features=5)
+    assert gradient_flops(n_samples=20, n_features=5) == 2 * base
+    assert gradient_flops(n_samples=10, n_features=10) == 2 * base
+
+
+def test_gradient_flops_zero_for_empty_batch():
+    assert gradient_flops(n_samples=0, n_features=5) == 0
 
 
 def test_hessian_max_eigenvalue_without_regularization():
