@@ -1,0 +1,90 @@
+\subsection{Use of AI/LLM Tools}
+\label{app:ai-tools}
+
+% LLM appendix: tools used (A.1), a contribution level per report section (0–3, A.2), and a level per code file (0–4, A.3). The LLM-assisted docstring tags in the code must match the appendix. Also give one example of a use that must be declared and one that need not (5c).
+
+Artificial intelligence and large language models (LLMs) have been used as tools throughout the development and writing of this project. This appendix describes how these tools were used and identifies the parts of the project in which they contributed. The declaration follows the guidelines provided by the course\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}}, refer to it for understanding the levels in the tables below.
+
+% Refer to the guidance document\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}} in the official GitHub-repository for how to write this appendix.
+
+\subsubsection{Tools used}
+
+Below we summarize all AI tools used in the development and writing of this project.
+
+\begin{itemize}
+    \item Anthropic's Claude, accessed via \url{https://claude.ai/} and Claude Code, September--October 2026. Models used include Claude Sonnet 4 and Claude Opus 4.
+    \item OpenAI's ChatGPT, accessed via \url{https://chatgpt.com/}, September--October 2026.
+\end{itemize}
+
+\subsubsection{Text Writing and Editing}
+
+% For each section of the report, state the role the LLM played using one of the four contribution. If any section is Level 3, add a sentence describing what prompt(s) you used and what changes you made to the LLM output.
+
+For each section of the report, we state the role that LLMs have played in contributing in \cref{tab:llm-writing-contribution}.
+
+\begin{table}[ht]
+    \centering
+    \caption{LLM contribution to text writing and editing.}
+    \label{tab:llm-writing-contribution}
+    \begin{tabular}{lcp{4.5cm}}
+        \toprule
+        \textbf{Section} & \textbf{Level} & \textbf{Description} \\
+        \midrule
+        Abstract     & 3 & Draft generated from the other report sections; used as a starting point and substantially revised. \\
+        Introduction & 2 & Two paragraphs rephrased for clarity. \\
+        Methodology  & 1 & Grammar checking and minor rephrasing only. \\
+        Results      & 1 & Grammar checking and minor rephrasing only. \\
+        Discussion   & 1 & Grammar checking and minor rephrasing only. \\
+        Conclusion   & 1 & Grammar checking and minor rephrasing only. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+For the level 3 contribution to the abstract, Claude Opus was prompted to draft an abstract based on the completed sections of the report. The generated text was subsequently reviewed, corrected, and substantially revised by the authors.
+
+\subsubsection{Code Generation and Assistance}
+
+For each code file and notebook submitted as part of the project, we state the role of LLMs in \cref{tab:code-generation}. Level 0 indicates that no LLM assistance was used.
+
+% For each code file or notebook submitted, state the LLM's role using the provided levels.
+% Additionally, every LLM-generated or LLM-assisted function must carry an inline comment in the source code itself (see Section 5).
+
+% Maybe we should split this into separate tables for notebooks, scripts, src/, and misc.? Should we bother doing this for pyproject.toml, AGENTS.md, README.md, etc.?
+
+\begin{table}[ht] % Should we structure this by folder structure? How to do that without it overflowing the line width?
+    \centering
+    \caption{LLM contribution in code writing}
+    \label{tab:code-generation}
+    \begin{tabularx}{\columnwidth}{@{}l c X@{}}
+        \toprule
+        \textbf{File / Notebook} & \textbf{Level} & \textbf{Description} \\
+        \midrule
+        \texttt{design\_matrix.py} & 0 & \\
+        \texttt{runge.py} & 0 &  \\
+        \texttt{optimizers.py} & 3 & Claude provided the framework for the abstract \texttt{Optimizer} class and assisted with input-shape validation. \\
+        \texttt{schedules.py} & 4 & Claude fully generated the file with the three learning rate schedule functions. We reviewed and verified it. \\
+        \texttt{autodiff.py} & 2 & Claude assisted with the JIT-compilation implementation. \\
+        \texttt{base.py} & 2 & Claude implemented inheritance from sklearn's BaseEstimator and RegressorMixin, allowing the linear models to be used in scikit-learn pipelines. \\
+        \texttt{cost.py} & - &  \\
+        \texttt{degree\_sweep.py} & 3 & Claude refactored this out of notebooks and generalized it. Based on code written by us. \\
+        \texttt{gradient\_descent.py} & 2 & Claude implemented the internal learning rate scheduling. \\
+        \texttt{lasso.py} & - &  \\
+        \texttt{ordinary\_least\_squares.py} & 1 & Claude suggested the \texttt{rcond} parameter and singular-value cutoff logic for the SVD-based
+        pseudoinverse. \\
+        \texttt{ridge.py} & - &  \\
+        \texttt{shrinkage.py} & - &  \\
+        \texttt{bootstrap.py} & - &  \\
+        \texttt{cross\_validation.py} & - &  \\
+        \texttt{metrics.py} & 0 &  \\
+        \texttt{A\_ols.ipynb} & - &  \\
+        \texttt{B\_ridge.ipynb} & - &  \\
+        \texttt{C-D\_bias-variance.ipynb} & - &  \\
+        \texttt{E-F\_gradient\_descent.ipynb} & - &  \\
+        \texttt{G\_lasso.ipynb} & - &  \\
+        \texttt{H\_sgd.ipynb} & - &  \\
+        \texttt{I\_final\_analysis.ipynb} & - &  \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+Claude Code was also used extensively for writing docstrings and unit tests throughout the code base. These contributions are not listed individually in \cref{tab:code-generation}, as they were applied consistently across the code base.

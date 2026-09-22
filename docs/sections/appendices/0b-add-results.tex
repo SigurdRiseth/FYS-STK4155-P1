@@ -1,0 +1,23 @@
+\subsection{Additional Results}
+
+Here we present additional results.
+
+\subsubsection{Bias--variance trade-off}
+
+Increasing the dataset size lowers the variance at any given degree: with more data the fit depends less on the particular training sample, so each prediction $\tilde{y}_i$ varies less around its mean and the variance term in \cref{eq:var-term} shrinks. The bias curve -- a property of the model family, not of $n$ -- barely moves. This postpones the variance explosion and lets model complexity grow further before overfitting sets in, as seen in \cref{fig:bias_variance_tradeoff_by_n}, where the optimal degree moves from 4 at $n=50$ to 12 at $n=400$. % is eq. 2.24 of Hjorth-Jensen relevant here?
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/bias_variance/bias_variance_tradeoff_by_n.pdf}
+    \caption{Effect of sample size on the bias-variance trade-off}
+    \label{fig:bias_variance_tradeoff_by_n}
+\end{figure}
+
+Increasing the noise level $\sigma^2$ has the opposite effect on complexity: \cref{fig:bias_variance_tradeoff_by_noise} shows that the error floor rises and the variance term scales up, while bias$^2$ is essentially unchanged, so noisier data favor simpler models and the best degree shifts downward.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/bias_variance/bias_variance_tradeoff_by_noise.pdf}
+    \caption{Effect of sample size on the bias-variance trade-off}
+    \label{fig:bias_variance_tradeoff_by_noise}
+\end{figure}

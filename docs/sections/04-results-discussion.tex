@@ -1,0 +1,85 @@
+\section{Results and Discussion}
+\label{sec:results-discussion}
+
+% Present your results
+% Give a critical discussion of your work and place it in the correct context.
+% Relate your work to other calculations/studies
+% An eventual reader should be able to reproduce your calculations. All input variables should be properly explained.
+% Make sure that figures and tables should contain enough information in their captions, axis labels etc so that an eventual reader can gain a first impression of your work by studying figures and tables only.
+
+% OLS & Ridge: MSE/R², θ vs degree, λ dependence
+% Bias–variance via bootstrap vs CV (do they agree on optimal complexity?)
+% Optimizers compared (iterations to accuracy, LR sensitivity)
+% Final OLS/Ridge/Lasso CV comparison; tie back to which bias-variance term each attacks
+
+All results shown here are from $n = 100$ points drawn uniformly from $[-1,1]$, noise level $\sigma = 0.1$, a 80/20 train--test split, and the predictors centered and scaled using statistics computed on the training set only, unless otherwise is stated.
+
+\subsection{Analytical solutions for OLS and Ridge}
+
+\Cref{fig:ols_mse_r2_vs_degree} shows the training and test error of the OLS fit as a function of polynomial degree. The training error decreases monotonically with degree, while the test error flattens out and then rises, the qualitative signature of overfitting: past some complexity the added flexibility is spent on the noise realization rather than on $f$. For this particular split the test MSE is minimized at degree $12$. The left panel reproduces the behavior of fig.~2.11 of \textcite{hastieElementsStatisticalLearning2017}, although less clear.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ols/ols_mse_r2_vs_degree.pdf}
+    \caption{Best OLS model at degree 12, where we see the model overfits (test error increases) at higher degrees. For $n = 100$ points drawn uniformly from $[-1,1]$, noise level $\sigma = 0.1$, a 80/20 train--test split, and predictors centered and scaled using statistics computed on the training set only.}
+    \label{fig:ols_mse_r2_vs_degree}
+\end{figure}
+
+%\Cref{fig:ols_test_mse_r2_by_n} shows a seemingly counter-intuitive result: the test MSE for $n=50$ and $n=100$ is lower than for $n=500$ and $n=1000$. This does not imply that more training data makes OLS worse. Each dataset size uses a different random train--test split, and the test set grows with $n$ (from 10 points at $n=50$ to 200 at $n=1000$). When the fit is close to $f$, the standard error of an MSE estimate from $m$ test points is approximately $\sigma^2\sqrt{2/m}$, i.e.\ about $0.45\sigma^2$ for $m=10$ versus $0.1\sigma^2$ for $m=200$. The value $0.0067$ obtained at degree 10 for $n=50$ lies below the irreducible error $\sigma^2 = 0.01$, which is only possible because the ten test residuals happened to be small. Test MSE also only measures error where test points lie: the $n=50$ test points span roughly $x \in [-0.88, 0.65]$, so the large boundary oscillations of the high-degree fits (\cref{fig:ols_fits_n50}) are never penalised. At low degrees, test-set composition matters as well: the strongly negative $R^2$ for $n=100$ at degree 1 reflects a test set with low variance, containing few points near the peak at $x=0$. Repeated splits or cross-validation would give a more reliable comparison. Since the true function is known, evaluating each fit against $f(x)$ on a dense grid would remove the split dependence entirely.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ols/ols_test_mse_r2_by_n.pdf}
+    \caption{Test MSE (left) and $R^2$ (right) for OLS vs.\ polynomial degree for varying training-set sizes}
+\label{fig:ols_test_mse_r2_by_n}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ols/ols_coefficients_vs_degree.pdf}
+    \caption{Increasing polynomial degree leads to higher coefficient values ($\theta_i$). The intercept is given by $\overline{y}_{\text{train}}$ due to the standardization performed.}
+    \label{fig:ols_coefficients_vs_degree}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ridge/ridge_shrinkage_degree15.pdf}
+    \caption{Shrinkage of SVD modes vs. $\lambda$ (degree 15). We observe the singular-values with a higher index (i.e., lower value) have a sharper shrinkage, effectively performing parameter selection. We also see that $\lambda = 0$ gives no shrinkage and is equivalent to OLS. This is linked to the shrinkage factor given in \cref{eq:ridge_scaling}.}
+    \label{fig:ridge_shrinkage_degree15}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/ridge/ridge_trace_degree15.pdf}
+    \caption{Ridge trace: coefficients vs. $\lambda$ (degree 15)}
+    \label{fig:ridge_trace_degree15}
+\end{figure}
+
+\subsection{Bias--variance via resampling}
+
+\Cref{fig:bias_variance_tradeoff_bootstrap} shows the bias--variance decomposition from \cref{eq:bias-variance-decomposition}, with bias estimated as in \cref{eq:measured-bias}, for the OLS estimators. Simple models are dominated by bias, while complex models are dominated by variance; the best-performing degree lies between the two regimes, where both terms are small and the test MSE nearly reaches the irreducible noise floor $\sigma^2$.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/bias_variance/bias_variance_tradeoff_bootstrap.pdf}
+    \caption{Bias--variance trade-off via bootstrap}
+    \label{fig:bias_variance_tradeoff_bootstrap}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/cross_validation/ols_cv_vs_bootstrap.pdf}
+    \caption{Bootstrap vs $k$-fold cross-validation test MSE for OLS. We clearly see that for bootstrap, the error starts increasing after degree 6, while 5-fold has best degree at 10 and 10-fold has best degree at 13 (the highest degree checked).}
+    \label{fig:ols_cv_vs_bootstrap}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\linewidth]{figures/cross_validation/ridge_cv_heatmap.pdf}
+    \caption{Cross-validation MSE over degree and $\lambda$ search for Ridge regression. We observe optimum at degree 11 and $\lambda = 3.2e-07$ for 5-fold CV and degree 11 and $\lambda = 1.0e-06$ for 10-fold CV.}
+    \label{fig:ridge_cv_heatmap}
+\end{figure}
+
+\subsection{Optimizer comparison}
+
+Linear regression makes an excellent benchmark for gradient descent for three reasons: it has a closed-form solution for comparison, its gradient can be calculated exactly, and its convex cost function ensures convergence as long as the learning rate is sufficiently small~\cite{hjorth-jensenMachineLearningPhysical2026}.

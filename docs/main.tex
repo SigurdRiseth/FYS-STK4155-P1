@@ -1,0 +1,106 @@
+\documentclass[a4paper, conference, final]{IEEEtran}
+% \IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote.
+% If that is unneeded, please comment it out.
+\usepackage[
+    backend=biber,
+    style=ieee
+]{biblatex}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\usepackage{listings,newtxtt}
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\bfseries,
+    frame=leftline,
+    framesep=4pt,
+}
+\crefname{lstlisting}{listing}{listings}
+\Crefname{lstlisting}{Listing}{Listings}
+\usepackage{bm}
+\usepackage{tabularx}
+
+\addbibresource{references.bib}
+
+\begin{document}
+
+\title{
+    Selecting Model Complexity for Runge's Function:
+    Regularized Regression, Resampling and Gradient Descent
+}
+
+\author{
+    \IEEEauthorblockN{Sigurd Riseth}
+    \IEEEauthorblockA{\textit{Department of Physics} \\
+    \textit{University of Oslo}\\
+    Oslo, Norway \\
+    sigurri@uio.no}
+}
+
+\maketitle
+
+% Abstract. 120–180 words, one paragraph, no citations or equations.
+% Past tense for what you did, and at least one concrete result (e.g.
+% the degree that minimizes test MSE, or which optimizer matched the
+% closed form fastest).
+\begin{abstract}
+Runge's function is the classic example of polynomial interpolation
+on equispaced points diverging as the degree increases, which makes
+it a demanding test of how model complexity should be selected. We
+fitted polynomials of degree up to 15 to noisy samples of the
+function using ordinary least squares (OLS), Ridge and Lasso
+regression, and estimated the test error with the bootstrap and k-fold
+cross-validation. For OLS, the test mean squared error was minimized
+at degree [\,]; beyond this degree, the bootstrap variance grew
+[\,]-fold by degree [\,]. Cross-validation selected [Ridge] at degree
+[\,] and penalty [\,], with a test error [\,]\% below that of the best
+OLS model. We then replaced the closed-form solutions with our own
+gradient-descent optimizers, using both analytical and automatically
+differentiated gradients. [Adam] reached the closed-form solution to a
+relative error of [\,] in [\,] iterations, [\,] times fewer than plain
+gradient descent. Lasso, which has no closed-form solution, [set [\,]
+of [\,] coefficients to zero without improving on Ridge]. [For smooth
+targets such as this, shrinkage controlled the variance more effectively
+than sparsity.]
+\end{abstract}
+
+\begin{IEEEkeywords}
+regression, regularization, resampling, bias--variance trade-off,
+gradient descent, automatic differentiation
+\end{IEEEkeywords}
+
+%\tableofcontents
+
+\input{sections/01-introduction}
+\input{sections/02-methods}
+\input{sections/03-implementation}
+\input{sections/04-results-discussion}
+\input{sections/05-conclusion}
+
+\printbibliography
+
+\appendix
+
+% Additional calculations used to validate the codes
+% Selected calculations, these can be listed with few comments
+% Listing of the code if you feel this is necessary
+
+% You can consider moving parts of the material from the methods section
+% to the appendix or your GitHub/Gitlab repository. You can also place
+% additional material on your webpage.
+
+\input{sections/appendices/0a-ai-usage}
+\input{sections/appendices/0b-add-results}
+
+\end{document}

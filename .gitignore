@@ -34,3 +34,19 @@ data/*
 # docs/figures/README.md)
 docs/figures/*
 !docs/figures/README.md
+
+# LaTeX build artifacts (docs/main.pdf itself is committed as the report)
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.lof
+docs/*.lot
+docs/*.bbl
+docs/*.bcf
+docs/*.blg
+docs/*.run.xml
+docs/*.fls
+docs/*.fdb_latexmk
+docs/*.synctex.gz
+docs/*.gz
