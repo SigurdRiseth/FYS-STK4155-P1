@@ -1,7 +1,7 @@
 import numpy as np
 
-from fys_stk4155_p1.regression.autodiff import autodiff_gradient
-from fys_stk4155_p1.regression.cost import analytical_gradient
+from fys_stk4155_p1.regression.autodiff import autodiff_gradient, lasso_autodiff_gradient
+from fys_stk4155_p1.regression.cost import analytical_gradient, lasso_subgradient
 from fys_stk4155_p1.regression.ordinary_least_squares import OLS
 
 
@@ -60,3 +60,52 @@ def test_gradients_agree_at_the_ols_minimum() -> None:
 
     np.testing.assert_allclose(analytical, np.zeros_like(theta), atol=1e-10)
     np.testing.assert_allclose(autodiff, analytical, atol=1e-10)
+
+
+def test_lasso_gradients_agree_away_from_zero() -> None:
+    rng = np.random.default_rng(10)
+    X = rng.normal(size=(20, 5))
+    y = rng.normal(size=20)
+    theta = rng.normal(size=5)  # essentially never exactly 0
+    lam = 0.4
+
+    np.testing.assert_allclose(
+        lasso_autodiff_gradient(X, y, theta, lam=lam),
+        lasso_subgradient(X, y, theta, lam=lam),
+        atol=1e-10,
+    )
+
+
+def test_lasso_gradients_agree_with_unpenalized_intercept() -> None:
+    rng = np.random.default_rng(11)
+    x = rng.normal(size=20)
+    X = np.column_stack([np.ones_like(x), x, x**2])
+    y = rng.normal(size=20)
+    theta = rng.normal(size=3)
+    lam = 0.5
+
+    np.testing.assert_allclose(
+        lasso_autodiff_gradient(X, y, theta, lam=lam, fit_intercept_column=True),
+        lasso_subgradient(X, y, theta, lam=lam, fit_intercept_column=True),
+        atol=1e-10,
+    )
+
+
+def test_lasso_gradients_disagree_exactly_at_the_kink() -> None:
+    # |theta_j| is not differentiable at theta_j = 0, and analytical/autodiff
+    # pick different (both valid) subgradients there: np.sign(0) == 0
+    # analytically, vs. JAX's jax.grad(jnp.abs) returning +1.0 exactly at 0
+    # (verified empirically). This is the issue's discussion prompt, made an
+    # executable fact rather than only prose.
+    X = np.array([[1.0, 1.0], [1.0, 2.0]])
+    y = np.array([1.0, 2.0])
+    theta = np.array([0.0, 1.0])  # X @ theta == y exactly, so the MSE term
+    # contributes nothing at index 0, isolating the L1 term's value there.
+    lam = 2.0
+
+    analytical = lasso_subgradient(X, y, theta, lam=lam)
+    autodiff = lasso_autodiff_gradient(X, y, theta, lam=lam)
+
+    assert analytical[0] == 0.0
+    assert autodiff[0] == lam
+    np.testing.assert_allclose(analytical[1:], autodiff[1:], atol=1e-10)

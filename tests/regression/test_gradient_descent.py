@@ -3,6 +3,7 @@ from typing import Any, Literal
 import numpy as np
 import pytest
 
+from fys_stk4155_p1.regression.cost import lasso_cost
 from fys_stk4155_p1.regression.gradient_descent import GradientDescent, gradient_descent_sweep
 from fys_stk4155_p1.regression.ridge import Ridge
 
@@ -54,6 +55,48 @@ def test_stops_early_once_converged() -> None:
 
     assert model.n_iter_ < 10000
     assert model.cost_history_.shape == (model.n_iter_,)
+
+
+def test_default_penalty_is_l2() -> None:
+    model = GradientDescent(learning_rate=0.1)
+    assert model.penalty == "l2"
+
+
+def test_penalty_l1_uses_lasso_cost_for_history() -> None:
+    # Regression test for the dispatch itself: penalty="l1" must actually
+    # switch which gradient/cost functions fit() uses, not just accept and
+    # ignore the argument.
+    rng = np.random.default_rng(5)
+    X = rng.normal(size=(30, 3))
+    y = rng.normal(size=30)
+
+    model = GradientDescent(learning_rate=0.05, lam=0.3, max_iter=50, penalty="l1").fit(X, y)
+
+    expected_final_cost = lasso_cost(X, y, model.coef_, lam=0.3)
+    assert model.cost_history_[-1] == pytest.approx(expected_final_cost)
+
+
+def test_penalty_l1_shrinks_coefficients_as_lam_grows() -> None:
+    rng = np.random.default_rng(6)
+    X = rng.normal(size=(200, 3))
+    true_theta = np.array([1.0, -2.0, 0.5])
+    y = X @ true_theta + 0.01 * rng.normal(size=200)
+
+    small_lam = GradientDescent(
+        learning_rate=0.05, lam=0.01, max_iter=5000, optimizer="adam", penalty="l1"
+    ).fit(X, y)
+    large_lam = GradientDescent(
+        learning_rate=0.05, lam=5.0, max_iter=5000, optimizer="adam", penalty="l1"
+    ).fit(X, y)
+
+    assert np.linalg.norm(large_lam.coef_) < np.linalg.norm(small_lam.coef_)
+
+
+def test_rejects_unknown_penalty() -> None:
+    X = np.zeros((5, 2))
+    y = np.zeros(5)
+    with pytest.raises(ValueError, match="penalty must be one of"):
+        GradientDescent(learning_rate=0.1, penalty="bogus").fit(X, y)  # type: ignore[arg-type]
 
 
 def test_rejects_negative_lam() -> None:

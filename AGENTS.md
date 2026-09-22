@@ -38,7 +38,8 @@ suite, on every push to `main` and every PR.
 
 - `src/fys_stk4155_p1/` — the only place reusable/tested logic lives, split
   by concern: `data/` (Runge sampling, polynomial design matrix), `regression/`
-  (shared `LinearModel` base, OLS, Ridge, degree sweeps; LASSO not yet added),
+  (shared `LinearModel` base, OLS, Ridge, Lasso (via `GradientDescent`,
+  `penalty="l1"` — no closed form), degree sweeps),
   `resampling/` (bootstrap; cross-validation in progress), and `metrics.py`.
 - `scripts/` — thin CLI entry points that wire together `src/` logic
   (argparse + I/O only), e.g. `generate_data.py` (writes

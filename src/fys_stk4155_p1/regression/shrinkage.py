@@ -1,8 +1,11 @@
-"""Ridge-specific analysis helpers: coefficient paths and SVD-mode shrinkage."""
+"""Coefficient-path and SVD-mode shrinkage analysis helpers for Ridge and Lasso."""
+
+from typing import Literal
 
 import numpy as np
 from numpy.typing import NDArray
 
+from fys_stk4155_p1.regression.lasso import Lasso
 from fys_stk4155_p1.regression.ridge import Ridge
 
 
@@ -27,6 +30,55 @@ def ridge_coefficient_path(
     return np.array(
         [
             Ridge(lam=lam, fit_intercept_column=fit_intercept_column).fit(X, y).coef_
+            for lam in lambdas
+        ]
+    )
+
+
+def lasso_coefficient_path(
+    X: NDArray[np.float64],
+    y: NDArray[np.float64],
+    lambdas: NDArray[np.float64],
+    learning_rate: float,
+    optimizer: Literal["plain", "momentum", "adagrad", "rmsprop", "adam"] = "adam",
+    max_iter: int = 5000,
+    tol: float = 1e-10,
+    fit_intercept_column: bool = False,
+) -> NDArray[np.float64]:
+    """Fit Lasso once per lambda and stack the resulting coefficients.
+
+    Same contract as `ridge_coefficient_path`, but Lasso has no closed form
+    (see `Lasso`/`GradientDescent`), so fitting it needs gradient-descent
+    knobs Ridge's normal equations don't: `learning_rate`, `optimizer`
+    (defaults to `"adam"`, the most reliable optimizer across learning rates
+    per the parts E/F experiments), `max_iter`, and `tol`.
+
+    Args:
+        X: Design matrix, shape (n_samples, n_features).
+        y: Targets, shape (n_samples,).
+        lambdas: Penalty strengths to sweep, shape (n_lambdas,).
+        learning_rate: Step size passed to `Lasso`'s optimizer.
+        optimizer: Which `Optimizer` subclass to fit each lambda with.
+        max_iter: Maximum number of gradient steps per lambda.
+        tol: Convergence tolerance passed through to `Lasso`.
+        fit_intercept_column: Passed through to `Lasso` (see its docstring).
+
+    Returns:
+        Coefficient path, shape (n_lambdas, n_features); row k is the fit at
+        lambdas[k].
+    """
+    return np.array(
+        [
+            Lasso(
+                learning_rate=learning_rate,
+                lam=lam,
+                max_iter=max_iter,
+                tol=tol,
+                optimizer=optimizer,
+                fit_intercept_column=fit_intercept_column,
+            )
+            .fit(X, y)
+            .coef_
             for lam in lambdas
         ]
     )
