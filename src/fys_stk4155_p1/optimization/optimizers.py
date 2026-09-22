@@ -1,7 +1,7 @@
 """Optimizers."""
 
 # TODO: Consider adding a `decay` parameter for learning rate scheduling
-# (ref. Géron Chapter 11)
+# (ref. Géron Chapter 11 and Hjorth-Jensen section 4.7.1)
 
 from abc import ABC, abstractmethod
 
@@ -311,9 +311,104 @@ class RMSProp(Optimizer):
         return theta - self.learning_rate / (np.sqrt(self.v_) + self.eps) * grad
 
 
-# TODO: Implement Adam
-# class Adam(Optimizer):
-#    pass
+class Adam(Optimizer):
+    """Adam gradient descent.
+
+    Maintains exponentially decaying averages of the gradient (first
+    moment) and the squared gradient (second moment), each bias-corrected
+    to account for their zero initialization:
+
+        m_t     = beta1 * m_{t-1} + (1 - beta1) * grad
+        v_t     = beta2 * v_{t-1} + (1 - beta2) * grad * grad
+        m_hat   = m_t / (1 - beta1**t)
+        v_hat   = v_t / (1 - beta2**t)
+        theta_t = theta_{t-1} - learning_rate * m_hat / (sqrt(v_hat) + eps)
+
+    `m` and `v` are initialized to zero on the first call to `step` (or by
+    `reset`), and `t` counts the number of steps taken since then.
+
+    Args:
+        learning_rate: Step size scaling the gradient in each update.
+        beta1: Decay rate of the first-moment (mean) estimate, in [0, 1).
+            Defaults to 0.9.
+        beta2: Decay rate of the second-moment (uncentered variance)
+            estimate, in [0, 1). Defaults to 0.999.
+        eps: Small positive constant for numerical stability.
+
+    Raises:
+        ValueError: If `learning_rate` or `eps` is not strictly positive,
+            or `beta1`/`beta2` is not in [0, 1).
+    """
+
+    m_: NDArray[np.float64] | None
+    v_: NDArray[np.float64] | None
+    beta1: float
+    beta2: float
+    eps: float
+    t_: int
+
+    def __init__(
+        self,
+        learning_rate: float,
+        beta1: float = 0.9,
+        beta2: float = 0.999,
+        eps: float = 1e-8,
+    ) -> None:
+        super().__init__(learning_rate)
+        if not 0 <= beta1 < 1:
+            raise ValueError(f"beta1 must be in [0, 1), got {beta1}")
+        if not 0 <= beta2 < 1:
+            raise ValueError(f"beta2 must be in [0, 1), got {beta2}")
+        if eps <= 0:
+            raise ValueError(f"eps must be strictly positive, got {eps}")
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.eps = eps
+        self.m_ = None
+        self.v_ = None
+        self.t_ = 0
+
+    def reset(self, n_params: int) -> None:  # noqa: ARG002
+        """Discard accumulated moments ahead of a new optimization run.
+
+        Args:
+            n_params: Number of parameters being optimized (unused; the
+                moment buffers are lazily reallocated on next `step`).
+        """
+        self.m_ = None
+        self.v_ = None
+        self.t_ = 0
+
+    def step(self, theta: NDArray[np.float64], grad: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Compute the updated parameters for one Adam step.
+
+        The moment buffers are allocated on first use, so calling `reset`
+        beforehand is only needed to discard state carried over from a
+        previous run. If `grad`'s shape differs from already-allocated
+        buffers, call `reset` first.
+
+        Args:
+            theta: Current parameter values.
+            grad: Gradient of the cost function at `theta`.
+
+        Returns:
+            Updated parameter values.
+
+        Raises:
+            ValueError: If `theta` and `grad` shapes differ, or if `grad`'s
+                shape differs from an existing moment buffer's shape.
+        """
+        self._check_shapes(theta, grad)
+        self.m_ = self._init_or_check_state(self.m_, grad, "m_")
+        self.v_ = self._init_or_check_state(self.v_, grad, "v_")
+
+        self.t_ += 1
+        self.m_ = self.beta1 * self.m_ + (1 - self.beta1) * grad
+        self.v_ = self.beta2 * self.v_ + (1 - self.beta2) * grad * grad
+
+        m_hat = self.m_ / (1 - self.beta1**self.t_)
+        v_hat = self.v_ / (1 - self.beta2**self.t_)
+        return theta - self.learning_rate * m_hat / (np.sqrt(v_hat) + self.eps)
 
 
 OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
@@ -321,5 +416,5 @@ OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
     "momentum": Momentum,
     "adagrad": AdaGrad,
     "rmsprop": RMSProp,
-    #    "adam": Adam,
+    "adam": Adam,
 }
