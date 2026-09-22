@@ -53,7 +53,10 @@ def plot_convergence(
     panel's own cost surface, so both panels converge in a comparable number
     of steps despite Ridge's Hessian being better conditioned than OLS's.
     """
-    fig, axes = plt.subplots(1, len(lambdas), figsize=FIGSIZE_WIDE, sharey=True)
+    # Independent y-scales: OLS's Hessian is far worse-conditioned than
+    # Ridge's, so its cost sits on a different scale and a shared axis would
+    # flatten out one panel's own convergence shape.
+    fig, axes = plt.subplots(1, len(lambdas), figsize=FIGSIZE_WIDE, sharey=False)
 
     for ax, (label, lam) in zip(axes, lambdas.items(), strict=True):
         gamma_max = 2 / hessian_max_eigenvalue(X_train, lam=lam, fit_intercept_column=True)
@@ -80,10 +83,10 @@ def plot_convergence(
         ax.axhline(closed_form_cost, color="black", ls="--", lw=1, label="closed-form")
         ax.set_yscale("log")
         ax.set_xlabel("Iteration")
+        ax.set_ylabel("Cost")
         ax.set_title(rf"{label} ($\gamma={safety_factor:g}\times 2/\lambda_{{max}}(H)$)")
         ax.legend(fontsize="small")
 
-    axes[0].set_ylabel("Cost")
     fig.suptitle("Plain gradient descent: convergence to the closed-form solution")
     fig.tight_layout()
     return fig
