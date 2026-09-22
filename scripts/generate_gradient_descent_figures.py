@@ -65,8 +65,15 @@ def plot_convergence(
         closed_form = Ridge(lam=lam, fit_intercept_column=True).fit(X_train, y_train)
         closed_form_cost = cost(X_train, y_train, closed_form.coef_, lam, fit_intercept_column=True)
 
-        gradient_methods: list[Literal["analytical", "autodiff"]] = ["analytical", "autodiff"]
-        for gradient_method in gradient_methods:
+        # analytical and autodiff agree to ~1e-10 (test_autodiff.py), so their
+        # cost histories coincide almost exactly; a thick solid line under a
+        # thin dashed one shows both are actually drawn, rather than one
+        # silently hiding behind the other.
+        gradient_method_styles: dict[Literal["analytical", "autodiff"], dict[str, object]] = {
+            "analytical": {"lw": 2.5, "ls": "-"},
+            "autodiff": {"lw": 1.25, "ls": "--"},
+        }
+        for gradient_method, style in gradient_method_styles.items():
             gd = GradientDescent(
                 learning_rate=learning_rate,
                 lam=lam,
@@ -78,6 +85,7 @@ def plot_convergence(
                 np.arange(1, gd.n_iter_ + 1),
                 gd.cost_history_,
                 label=f"{gradient_method} ({gd.n_iter_} iters)",
+                **style,
             )
 
         ax.axhline(closed_form_cost, color="black", ls="--", lw=1, label="closed-form")
