@@ -252,9 +252,63 @@ class AdaGrad(Optimizer):
         return theta - self.learning_rate * grad / (np.sqrt(self.r_) + self.eps)
 
 
-# TODO: Implement RMSProp
-# class RMSProp(Optimizer):
-#    pass
+class RMSProp(Optimizer):
+    """RMSProp gradient descent.
+
+    Maintains an exponentially decaying average of squared gradients:
+
+        v_t     = rho * v_{t-1} + (1 - rho) * grad * grad
+        theta_t = theta_{t-1} - learning_rate / (sqrt(v_t) + eps) * grad
+
+    `v` is initialized to zero on the first call to `step`.
+
+    Args:
+        learning_rate: Step size scaling the gradient in each update.
+        rho: Decay rate of the squared-gradient average, in [0, 1).
+        eps: Small positive constant for numerical stability.
+
+    Raises:
+        ValueError: If `learning_rate` or `eps` is not strictly positive,
+            or `rho` is not in [0, 1).
+    """
+
+    rho: float
+    eps: float
+    v_: NDArray[np.float64] | None
+
+    def __init__(self, learning_rate: float, rho: float = 0.9, eps: float = 1e-8) -> None:
+        super().__init__(learning_rate)
+        if not 0 <= rho < 1:
+            raise ValueError(f"rho must be in [0, 1), got {rho}")
+        if eps <= 0:
+            raise ValueError(f"eps must be strictly positive, got {eps}")
+        self.eps = eps
+        self.rho = rho
+        self.v_ = None
+
+    def reset(self, n_params: int) -> None:
+        """Discard accumulated state."""
+        self.v_ = None
+
+    def step(self, theta: NDArray[np.float64], grad: NDArray[np.float64]) -> NDArray[np.float64]:
+        """Compute the updated parameters for one RMSProp step.
+
+        Args:
+            theta: Current parameter values.
+            grad: Gradient of the cost function at `theta`.
+
+        Returns:
+            Updated parameter values.
+
+        Raises:
+            ValueError: If `theta` and `grad` shapes differ, or if `grad`'s
+                shape differs from the existing accumulator's shape.
+        """
+        self._check_shapes(theta, grad)
+        self.v_ = self._init_or_check_state(self.v_, grad, "v_")
+
+        self.v_ = self.rho * self.v_ + (1 - self.rho) * grad * grad
+        return theta - self.learning_rate / (np.sqrt(self.v_) + self.eps) * grad
 
 
 # TODO: Implement Adam
@@ -266,6 +320,6 @@ OPTIMIZER_REGISTRY: dict[str, type[Optimizer]] = {
     "plain": Plain,
     "momentum": Momentum,
     "adagrad": AdaGrad,
-    #    "rmsprop": RMSProp,
+    "rmsprop": RMSProp,
     #    "adam": Adam,
 }
