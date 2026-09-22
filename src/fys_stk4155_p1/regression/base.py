@@ -43,6 +43,19 @@ class LinearModel(BaseEstimator, RegressorMixin, ABC):
     def _validate_inputs(
         X: NDArray[np.float64], y: NDArray[np.float64]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        """Validate and convert a design matrix and target vector.
+
+        Args:
+            X: Design matrix with shape ``(n_samples, n_features)``.
+            y: Target vector with shape ``(n_samples,)``.
+
+        Returns:
+            The inputs converted to ``float64`` NumPy arrays.
+
+        Raises:
+            ValueError: If either input has an invalid dimension or their
+                numbers of samples do not match.
+        """
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
 
