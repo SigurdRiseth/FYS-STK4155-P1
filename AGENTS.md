@@ -25,7 +25,7 @@ make typecheck    # uv run mypy
 make check        # lint + typecheck + test
 make clean        # remove caches (__pycache__, .pytest_cache, .mypy_cache, .ruff_cache, htmlcov)
 
-uv run pytest tests/test_runge.py::test_polynomial_design_matrix_shape  # single test
+uv run pytest tests/data/test_runge.py::test_runge_function_at_zero_is_one  # single test
 uv run pre-commit run --all-files                                       # all hooks manually
 uv run python scripts/generate_data.py [--n 1000] [--noise 0.1] [--seed 42]  # regenerate dataset
 ```
@@ -36,19 +36,21 @@ suite, on every push to `main` and every PR.
 
 ## Architecture
 
-- `src/fys_stk4155_p1/` — the only place reusable/tested logic lives.
-  Currently: `runge.py` (the Runge test function and noisy-sample
-  generation) and `design_matrix.py` (bivariate polynomial design matrix
-  shared by OLS/Ridge/LASSO — monomials `x^i * y^j` for `i + j <= degree`,
-  ordered by increasing total degree, column 0 is the intercept).
+- `src/fys_stk4155_p1/` — the only place reusable/tested logic lives, split
+  by concern: `data/` (Runge sampling, polynomial design matrix), `regression/`
+  (shared `LinearModel` base, OLS, Ridge, Lasso (via `GradientDescent`,
+  `penalty="l1"` — no closed form), degree sweeps), `optimization/`
+  (the `Optimizer` registry — plain/momentum/AdaGrad/RMSProp/Adam — and
+  learning-rate schedules; `GradientDescent` also supports mini-batch SGD via
+  `batch_size`/`n_epochs`, looping over epochs instead of full-batch steps),
+  `resampling/` (bootstrap; cross-validation in progress), and `metrics.py`.
 - `scripts/` — thin CLI entry points that wire together `src/` logic
-  (argparse + I/O only). `generate_data.py` samples the Runge dataset and
-  writes it to `data/raw/runge.npz`; regression/experiment scripts should
-  follow the same pattern: import from the package, keep the script itself
-  free of algorithmic logic.
+  (argparse + I/O only), e.g. `generate_data.py` (writes
+  `data/raw/runge.npz`) and the `generate_*_figures.py` scripts (write to
+  `docs/figures/`); keep new scripts free of algorithmic logic.
 - `tests/` mirrors `src/` structure and asserts determinism (same seed →
   identical output) alongside correctness of shapes/values — follow this
-  pattern for new modules (e.g. upcoming OLS/Ridge/LASSO regressors).
+  pattern for new modules.
 - `data/` is gitignored except `README.md`; never commit raw or generated
   data — regenerate via `scripts/`, or `git add -f` with documented
   provenance if a dataset truly must be versioned.
@@ -67,4 +69,4 @@ suite, on every push to `main` and every PR.
 - Ruff rule set: pycodestyle (E/W), pyflakes (F), isort (I), pyupgrade (UP),
   bugbear (B), numpy-specific (NPY), pandas-vet (PD); line length 100.
 - Docstrings are Google-style with `Args:`/`Returns:`.
-- Use always double precision for jax (`jax.config.update("jax_enable_x64", True)`)
+- Always use double precision for jax (`jax.config.update("jax_enable_x64", True)`).

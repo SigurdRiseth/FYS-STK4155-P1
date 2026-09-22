@@ -1,6 +1,10 @@
 import numpy as np
 
-from fys_stk4155_p1.regression.shrinkage import ridge_coefficient_path, singular_value_shrinkage
+from fys_stk4155_p1.regression.shrinkage import (
+    lasso_coefficient_path,
+    ridge_coefficient_path,
+    singular_value_shrinkage,
+)
 
 
 def test_ridge_coefficient_path_shape_and_lambda0_matches_ols() -> None:
@@ -23,6 +27,31 @@ def test_ridge_coefficient_path_shrinks_toward_zero() -> None:
     lambdas = np.array([0.0, 1e3])
 
     path = ridge_coefficient_path(X, y, lambdas)
+
+    assert np.linalg.norm(path[1]) < np.linalg.norm(path[0])
+
+
+def test_lasso_coefficient_path_shape() -> None:
+    rng = np.random.default_rng(4)
+    X = rng.normal(size=(100, 3))
+    y = rng.normal(size=100)
+    lambdas = np.array([0.0, 0.1, 1.0])
+
+    path = lasso_coefficient_path(X, y, lambdas, learning_rate=0.05, max_iter=500)
+
+    assert path.shape == (3, 3)
+
+
+def test_lasso_coefficient_path_sparsifies_toward_zero() -> None:
+    rng = np.random.default_rng(5)
+    X = rng.normal(size=(300, 4))
+    true_theta = np.array([1.5, 0.0, -0.8, 0.0])
+    y = X @ true_theta + 0.05 * rng.normal(size=300)
+    lambdas = np.array([0.0, 5.0])
+
+    path = lasso_coefficient_path(
+        X, y, lambdas, learning_rate=0.05, optimizer="adam", max_iter=5000
+    )
 
     assert np.linalg.norm(path[1]) < np.linalg.norm(path[0])
 

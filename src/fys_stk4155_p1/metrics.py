@@ -5,11 +5,11 @@ from numpy.typing import NDArray
 
 
 def mean_squared_error(y_true: NDArray[np.float64], y_pred: NDArray[np.float64]) -> np.float64:
-    """Mean squared error between true and predicted targets.
+    """Compute the mean squared error between true and predicted targets.
 
     Args:
-        y_true: True targets, shape (n_samples,).
-        y_pred: Predicted targets, shape (n_samples,).
+        y_true: True target values, shape (n_samples,).
+        y_pred: Predicted target values, shape (n_samples,).
 
     Returns:
         The mean squared error.

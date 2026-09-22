@@ -1,5 +1,7 @@
 """Ridge regression."""
 
+from typing import Self
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -25,7 +27,7 @@ class Ridge(LinearModel):
         self.lam = lam
         self.fit_intercept_column = fit_intercept_column
 
-    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> "Ridge":
+    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> Self:
         """Fit theta by penalized least squares.
 
         Args:

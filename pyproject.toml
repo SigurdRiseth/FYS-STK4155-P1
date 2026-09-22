@@ -5,7 +5,7 @@ description = "Regression on the Runge function with OLS, Ridge, and Lasso (FYS-
 readme = "README.md"
 license = "GPL-3.0-or-later"
 authors = [
-    { name = "Sigurd Riseth", email = "sigurd.riseth@gmail.com" }
+    { name = "Sigurd Riseth" }
 ]
 requires-python = ">=3.12"
 dependencies = [
