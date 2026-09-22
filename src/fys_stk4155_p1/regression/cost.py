@@ -170,6 +170,38 @@ def sklearn_alpha_to_lam(alpha: float) -> float:
     return 2.0 * alpha
 
 
+def gradient_flops(n_samples: int, n_features: int) -> int:
+    """Approximate FLOPs for one `analytical_gradient`/`lasso_subgradient` call.
+
+    Dominated by the two matrix-vector products in
+    ``2/n * X.T @ (X @ theta - y)`` -- ``X @ theta`` and ``X.T @ residual`` --
+    each costing ``2 * n_samples * n_features`` FLOPs under the standard
+    multiply-add-counts-as-2 convention. This is an order-of-magnitude
+    estimate of the *dominant* term only: it excludes the optimizer's own
+    per-parameter bookkeeping (negligible next to the O(n_samples *
+    n_features) matrix-vector products at moderate/large batch sizes, but a
+    real undercount for adaptive optimizers at very small batch sizes such
+    as `batch_size=1`) and excludes any periodic full-training-set cost
+    evaluation used only for monitoring/plotting, which is not part of the
+    optimization algorithm itself.
+
+    Used by `regression.gradient_descent.GradientDescent` to track
+    `cost_flops_`, giving a batch-size-independent x-axis (actual compute,
+    rather than epoch/iteration count) for comparing full-batch gradient
+    descent against SGD at different mini-batch sizes.
+
+    Args:
+        n_samples: Number of rows the gradient was computed from (the full
+            training set for full-batch GD, or one mini-batch's size for
+            SGD).
+        n_features: Number of columns in the design matrix.
+
+    Returns:
+        Approximate FLOPs for one gradient evaluation at this shape.
+    """
+    return 4 * n_samples * n_features
+
+
 def hessian_max_eigenvalue(
     X: NDArray[np.float64], lam: float = 0.0, fit_intercept_column: bool = False
 ) -> np.float64:
