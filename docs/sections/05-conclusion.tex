@@ -1,10 +1,58 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-% State your main findings and interpretations
-% Try as far as possible to present perspectives for future work
-% Try to discuss the pros and cons of the methods and possible improvements
+We fitted polynomials of degree up to 20 to noisy samples of Runge's function
+with OLS, Ridge and Lasso, selected models with the bootstrap and $k$-fold
+cross-validation, and solved the regression problems with our own gradient-descent
+code. The central finding is that the resampling methods, not
+the regression methods, limit model selection here. With $n = 100$ random
+inputs, the true test error of OLS is flat between $p\approx10$ and $20$, but
+the bootstrap and CV estimates grow by orders of magnitude at high degree,
+because every resampled fit must extrapolate to held-out points outside its
+training range, and a high-degree polynomial diverges there, a statistical
+echo of Runge's phenomenon. The estimators therefore select too low a degree
+(median 8 for the bootstrap, 10--12 for CV, against 14 for the true optimum),
+the more so the fewer distinct points each fit uses. Ridge suppresses the
+directions of small singular values that cause these failures, which lets CV
+choose higher degrees with the same variance, but the selected penalties are
+tiny and the gain is marginal: the CV error drops by a median of $5\%$, the
+held-out error not at all, and the true error by $0.2\%$. Lasso, fitted by
+subgradient descent, did worse than OLS, because our solver does not reach the
+Lasso solution at high degree. On the optimization side, the condition number of the
+Hessian, which grows exponentially with the degree, explains all our results:
+plain GD needs about $\kappa$ iterations, momentum and Adam reach the
+closed-form solution 25 and 9 times faster at $p = 5$, no first-order method
+reaches the OLS solution at $p\geq10$, a Ridge penalty of $10^{-3}$ restores
+convergence, and subgradient descent for Lasso levels off at a distance from the
+optimum set by its step size and never produced an exact zero.
 
-% Conclusion in three paragraphs: findings with explanations, critical limitations, and concrete next steps. They suggest writing the critical paragraph first.
+Our study has clear limitations. The true error, which we used to judge the
+estimators, requires the known $f$ and is unavailable in practice; the same
+holds for the bias against $f$. We studied a single noise level and sample
+size for the model selection, a uniform random design, and one set of folds per
+data set, so the size of the extrapolation effect is specific to these
+choices; on an equispaced or Chebyshev grid, which contain the endpoints of the
+interval, it would be much smaller. The bootstrap estimates of bias and
+variance are means over replicates and are dominated by the few replicates that
+extrapolate badly; a robust estimate (median) would separate the two effects.
+The optimizer comparison used a learning-rate grid with four values per decade
+and fixed momentum and Adam parameters, which is too coarse to rank momentum
+and Adam where they differ by less than a factor of two, and it measures
+iterations, not time. Our Lasso results are limited by the solver: with a fixed
+number of 5000 Adam steps, the high-degree Lasso fits in the cross-validation
+are far from converged, so the Lasso model selection and comparison measure our
+optimizer as much as the Lasso model itself. Finally,
+all comparisons on the held-out data rest on 20 test points, whose MSE has a
+standard error of about $30\%$ of $\sigma^2$.
 
-% Please refer to Appendix~\ref{app:ai-tools} for a discussion on how AI tools where used in this project.
+Two extensions follow directly. First, replacing the monomials $x^j$ by
+orthogonal polynomials (Legendre or Chebyshev) on $[-1,1]$ spans the same model
+space but keeps $\kappa(\bm{X})$ small; gradient descent, including the
+subgradient method for Lasso, would then converge at every degree, and the
+coefficients would become interpretable. Second, we would make the
+resampling estimates less sensitive to extrapolation, for instance by assigning
+the smallest and largest $x$ to the training part of every fold, or by
+aggregating fold errors with the median, and test whether the selected degree
+then approaches the true optimum. Both are needed before the conclusions of this
+study can be transferred to the neural networks of the next project, whose
+optimization is equally sensitive to conditioning.

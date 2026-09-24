@@ -92,3 +92,12 @@ def test_lasso_grid_is_deterministic() -> None:
     results2 = kfold_mse_lasso_grid(x, y, range(0, 2), lambdas, k=5, seed=3, max_iter=200)
 
     np.testing.assert_array_equal(results1["mse_mean"], results2["mse_mean"])
+
+
+def test_degree_sweep_fold_mses_average_to_mean() -> None:
+    x, y = _sample_data()
+
+    results = kfold_mse_degree_sweep(x, y, range(0, 4), OLS, k=5)
+
+    assert results["mse_folds"].shape == (4, 5)
+    np.testing.assert_allclose(results["mse_folds"].mean(axis=1), results["mse_mean"])

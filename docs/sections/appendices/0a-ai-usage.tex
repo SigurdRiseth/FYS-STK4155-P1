@@ -1,90 +1,92 @@
-\subsection{Use of AI/LLM Tools}
+\subsection{Use of AI/LLM tools}
 \label{app:ai-tools}
 
-% LLM appendix: tools used (A.1), a contribution level per report section (0–3, A.2), and a level per code file (0–4, A.3). The LLM-assisted docstring tags in the code must match the appendix. Also give one example of a use that must be declared and one that need not (5c).
+% TODO(author): this appendix was drafted by Claude from what it did in the
+% Cowork session of 23 September 2026 and from the earlier version of this
+% appendix. Check every level against what YOU did, and complete the rows marked
+% TODO; the LLM-assisted docstrings in the code must tell the same story.
 
-Artificial intelligence and large language models (LLMs) have been used as tools throughout the development and writing of this project. This appendix describes how these tools were used and identifies the parts of the project in which they contributed. The declaration follows the guidelines provided by the course\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}}, refer to it for understanding the levels in the tables below.
-
-% Refer to the guidance document\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}} in the official GitHub-repository for how to write this appendix.
+Large language models were used throughout this project, following the course
+guidelines\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}},
+which also define the contribution levels below. All code was tested, all
+derivations were checked, and every claim in the report was read, understood
+and verified by the author.
 
 \subsubsection{Tools used}
-
-Below we summarize all AI tools used in the development and writing of this project.
-
 \begin{itemize}
-    \item Anthropic's Claude, accessed via \url{https://claude.ai/} and Claude Code, September--October 2026. Models used include Claude Sonnet 4 and Claude Opus 4.
-    \item OpenAI's ChatGPT, accessed via \url{https://chatgpt.com/}, September--October 2026.
+    \item Anthropic Claude via \url{https://claude.ai}, Claude Code, and the Claude
+    desktop app (cowork), September--October 2026
+    (Claude Sonnet 5.0 and Opus 5.5, 5, and 4.8 models).
+    \item OpenAI ChatGPT via \url{https://chatgpt.com}, September 2026.
 \end{itemize}
 
-\subsubsection{Text Writing and Editing}
 
-% For each section of the report, state the role the LLM played using one of the four contribution. If any section is Level 3, add a sentence describing what prompt(s) you used and what changes you made to the LLM output.
+\subsubsection{Text writing and editing}
+\Cref{tab:llm-writing-contribution} gives the contribution level for each part
+of the report.
 
-For each section of the report, we state the role that LLMs have played in contributing in \cref{tab:llm-writing-contribution}.
-
-\begin{table}[ht]
+\begin{table}[htbp]
     \centering
-    \caption{LLM contribution to text writing and editing.}
+    \caption{LLM contribution to text writing and editing (levels 0--3).}
     \label{tab:llm-writing-contribution}
-    \begin{tabular}{lcp{4.5cm}}
+    {\footnotesize
+    \begin{tabularx}{\columnwidth}{@{}lcX@{}}
         \toprule
-        \textbf{Section} & \textbf{Level} & \textbf{Description} \\
+        \textbf{Section} & \textbf{Level} & \textbf{Notes} \\
         \midrule
-        Abstract     & 3 & Draft generated from the other report sections; used as a starting point and substantially revised. \\
-        Introduction & 2 & Two paragraphs rephrased for clarity. \\
-        Methodology  & 1 & Grammar checking and minor rephrasing only. \\
-        Results      & 1 & Grammar checking and minor rephrasing only. \\
-        Discussion   & 1 & Grammar checking and minor rephrasing only. \\
-        Conclusion   & 1 & Grammar checking and minor rephrasing only. \\
+        Abstract & 3 & Drafted by Claude from the finished results; revised by the author. \\
+        Introduction & 2 & Author's text; last three paragraphs revised by Claude. \\
+        Methods & 2 & Author's text; corrected by Claude. \\
+        Implementation & 2 & Author's text; revised by Claude. \\
+        Results and discussion & 3 & Drafted by Claude from the experiments; revised by the author. \\
+        Conclusion & 3 & Drafted by Claude; revised by the author. \\
+        Appendices & 3 & Drafted by Claude; revised by the author. \\
         \bottomrule
-    \end{tabular}
+    \end{tabularx}}
 \end{table}
 
-For the level 3 contribution to the abstract, Claude Opus was prompted to draft an abstract based on the completed sections of the report. The generated text was subsequently reviewed, corrected, and substantially revised by the authors.
+\subsubsection{Code generation and assistance}
+\Cref{tab:code-generation} gives the level for each source file (levels 0--4).
+Functions with level 2 or above carry an \texttt{LLM-assisted} tag in their
+docstring. Claude Code was also used to write docstrings and unit tests across
+the code base.
 
-\subsubsection{Code Generation and Assistance}
-
-For each code file and notebook submitted as part of the project, we state the role of LLMs in \cref{tab:code-generation}. Level 0 indicates that no LLM assistance was used.
-
-% For each code file or notebook submitted, state the LLM's role using the provided levels.
-% Additionally, every LLM-generated or LLM-assisted function must carry an inline comment in the source code itself (see Section 5).
-
-% Maybe we should split this into separate tables for notebooks, scripts, src/, and misc.? Should we bother doing this for pyproject.toml, AGENTS.md, README.md, etc.?
-
-\begin{table}[ht] % Should we structure this by folder structure? How to do that without it overflowing the line width?
+\begin{table*}[htbp]
     \centering
-    \caption{LLM contribution in code writing}
+    \caption{LLM contribution to the code (levels 0--4).}
     \label{tab:code-generation}
-    \begin{tabularx}{\columnwidth}{@{}l c X@{}}
+    {\footnotesize
+    \begin{tabularx}{\textwidth}{@{}l c X@{}}
         \toprule
-        \textbf{File / Notebook} & \textbf{Level} & \textbf{Description} \\
+        \textbf{File} & \textbf{Level} & \textbf{Description} \\
         \midrule
-        \texttt{design\_matrix.py} & 0 & \\
-        \texttt{runge.py} & 0 &  \\
-        \texttt{optimizers.py} & 3 & Claude provided the framework for the abstract \texttt{Optimizer} class and assisted with input-shape validation. \\
-        \texttt{schedules.py} & 4 & Claude fully generated the file with the three learning rate schedule functions. We reviewed and verified it. \\
-        \texttt{autodiff.py} & 2 & Claude assisted with the JIT-compilation implementation. \\
-        \texttt{base.py} & 2 & Claude implemented inheritance from sklearn's BaseEstimator and RegressorMixin, allowing the linear models to be used in scikit-learn pipelines. \\
-        \texttt{cost.py} & - &  \\
-        \texttt{degree\_sweep.py} & 3 & Claude refactored this out of notebooks and generalized it. Based on code written by us. \\
-        \texttt{gradient\_descent.py} & 2 & Claude implemented the internal learning rate scheduling. \\
-        \texttt{lasso.py} & - &  \\
-        \texttt{ordinary\_least\_squares.py} & 1 & Claude suggested the \texttt{rcond} parameter and singular-value cutoff logic for the SVD-based
-        pseudoinverse. \\
-        \texttt{ridge.py} & - &  \\
-        \texttt{shrinkage.py} & - &  \\
-        \texttt{bootstrap.py} & - &  \\
-        \texttt{cross\_validation.py} & - &  \\
-        \texttt{metrics.py} & 0 &  \\
-        \texttt{A\_ols.ipynb} & - &  \\
-        \texttt{B\_ridge.ipynb} & - &  \\
-        \texttt{C-D\_bias-variance.ipynb} & - &  \\
-        \texttt{E-F\_gradient\_descent.ipynb} & - &  \\
-        \texttt{G\_lasso.ipynb} & - &  \\
-        \texttt{H\_sgd.ipynb} & - &  \\
-        \texttt{I\_final\_analysis.ipynb} & - &  \\
+        \texttt{design\_matrix.py}, \texttt{runge.py}, \texttt{metrics.py} & 0 & \\
+        \texttt{ordinary\_least\_squares.py} & 1 & Claude suggested the singular-value cutoff of the pseudoinverse. \\
+        \texttt{ridge.py}, \texttt{cost.py}, \texttt{shrinkage.py} & 0 & \\
+        \texttt{base.py} & 2 & scikit-learn estimator interface. \\
+        \texttt{autodiff.py} & 2 & JIT compilation. \\
+        \texttt{optimizers.py} & 3 & Provided the framework of the \texttt{Optimizer} class and shape validation. \\
+        \texttt{schedules.py} & 4 & Learning-rate schedules; reviewed and tested by us. \\
+        \texttt{gradient\_descent.py} & 2 & Learning-rate scheduling. \\
+        \texttt{degree\_sweep.py} & 3 & Refactored from our notebooks and generalized. \\
+        \texttt{lasso.py} & 0 & \\
+        \texttt{bootstrap.py} & 2 & Bias against the known $f$ added by Claude. \\
+        \texttt{cross\_validation.py} & 2 & Per-fold output added by Claude. \\
+        \texttt{benchmark.py} & 4 & Iterations-to-tolerance benchmark, written by Claude. \\
+        \texttt{scripts/} & 3 & Experiments, figures and configuration, written in part by Claude,
+                                inspired by the notebooks. \\
+        \texttt{notebooks/} & 2 & Assistanse with plotting, providing feedback, and debugging. \\
+        \texttt{tests/} & 3 & Tests for the new code written by Claude; others with Claude Code. \\
         \bottomrule
-    \end{tabularx}
-\end{table}
+    \end{tabularx}}
+\end{table*}
 
-Claude Code was also used extensively for writing docstrings and unit tests throughout the code base. These contributions are not listed individually in \cref{tab:code-generation}, as they were applied consistently across the code base.
+\subsubsection{Declared and undeclared use}
+An example of a use that must be declared is the benchmark function
+\texttt{iterations\_to\_tolerance} in \texttt{benchmark.py}: Claude wrote the
+function, which appears in our submission, so it is declared here and in its
+docstring. An example of a use that need not be declared is using an LLM as a tutor, for
+instance to explain the difference between a gradient and a subgradient, and
+then writing about it in our own words. % TODO(author): replace with an example
+% from your own work (the text of this report was drafted with Claude, so it
+% cannot serve as the undeclared example).

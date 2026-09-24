@@ -6,6 +6,7 @@
     backend=biber,
     style=ieee
 ]{biblatex}
+\DeclareFieldFormat[article]{volume}{\mkbibbold{#1}}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{textcomp}
@@ -55,24 +56,21 @@
 % the degree that minimizes test MSE, or which optimizer matched the
 % closed form fastest).
 \begin{abstract}
-Runge's function is the classic example of polynomial interpolation
-on equispaced points diverging as the degree increases, which makes
-it a demanding test of how model complexity should be selected. We
-fitted polynomials of degree up to 15 to noisy samples of the
-function using ordinary least squares (OLS), Ridge and Lasso
-regression, and estimated the test error with the bootstrap and k-fold
-cross-validation. For OLS, the test mean squared error was minimized
-at degree [\,]; beyond this degree, the bootstrap variance grew
-[\,]-fold by degree [\,]. Cross-validation selected [Ridge] at degree
-[\,] and penalty [\,], with a test error [\,]\% below that of the best
-OLS model. We then replaced the closed-form solutions with our own
-gradient-descent optimizers, using both analytical and automatically
-differentiated gradients. [Adam] reached the closed-form solution to a
-relative error of [\,] in [\,] iterations, [\,] times fewer than plain
-gradient descent. Lasso, which has no closed-form solution, [set [\,]
-of [\,] coefficients to zero without improving on Ridge]. [For smooth
-targets such as this, shrinkage controlled the variance more effectively
-than sparsity.]
+Runge's function, the classic example of polynomial interpolation diverging
+with increasing degree, is a demanding test of how model complexity is
+chosen from noisy data. We fitted polynomials of degree up to 20
+to 100 noisy samples with ordinary least squares, Ridge and Lasso regression,
+estimated the test error with the bootstrap and k-fold cross-validation, and
+replaced the closed-form solutions by our own gradient-descent code. Since the data were synthetic, we compared every estimate
+with the true error. The bootstrap and cross-validation selected
+median degrees of 8 and 10, against 14 for the true optimum, because their
+estimates are dominated by extrapolation beyond the resampled training range.
+Over 31 data sets, Ridge lowered the cross-validation error of least squares by
+a median of 5\% but not the held-out error, and subgradient-descent Lasso did
+worse. Momentum and Adam reached the closed-form solution 25
+and 9 times faster than plain gradient descent at degree 5, yet no optimizer
+converged at degree 10 or higher without regularization. For polynomial models,
+how the error is estimated matters more than which penalty is used.
 \end{abstract}
 
 \begin{IEEEkeywords}

@@ -1,406 +1,353 @@
-\section{Mathematical Foundations}
+\section{Methods}
 \label{sec:method}
 
-% Describe the methods and algorithms
-% You need to explain how you implemented the methods and also say something
-% about the structure of your algorithm and present some parts of your code. You
-% should plug in some calculations to demonstrate your code, such as selected
-% runs used to validate and verify your results. The latter is extremely
-% important!! A reader needs to understand that your code reproduces selected
-% benchmarks and reproduces previous results, either numerical and/or well-known
-% closed form expressions.
-
-% Should I structure this into three parts? The first being introducing
-% mathematical methods and algorithms; the second, (high-level) implementation
-% details for the code; and lastly, verifications to validate and verify the
-% implementations results. Where to introduce the data set?
-
-This section presents the mathematical methods used in this study. We first
-introduce linear regression via ordinary least squares, followed by
-regularization through Ridge and Lasso. We then discuss the bias--variance
-trade-off, followed by the resampling methods bootstrap and $k$-fold
-cross-validation, and conclude with gradient descent and automatic
-differentiation. We assume familiarity with basic  linear algebra and
-statistics.
+This section presents the models, the error decomposition and the numerical
+methods of the study: linear regression by ordinary least squares, Ridge and
+Lasso; the bias--variance decomposition; the bootstrap and $k$-fold
+cross-validation; and gradient-based optimization, including its
+application to Lasso and automatic differentiation. We assume familiarity with
+basic linear algebra and statistics.
 
 \subsection{Linear regression}
+\label{subsec:linear-regression}
 
-Linear regression is among the earliest techniques in machine learning. It
-addresses the scenario in which we are given $n$ samples with $p$ features,
-arranged in a design matrix $\bm{X}\in \mathbb{R}^{n\times p}$, along with $n$
-targets $\bm{y}\in \mathbb{R}^n$. We assume the targets are produced according
-to
+We are given $n$ samples $(x_i, y_i)$ and assume that the targets are generated
+by
 \begin{equation}\label{eq:data_generating_process}
-    \bm{y} = f(\bm{x}) + \bm{\epsilon}, \qquad \bm{\epsilon}
-    \sim \mathcal{N}(0, \bm{\sigma}^2),
+    \bm{y} = \bm{f} + \bm{\varepsilon}, \qquad
+    \bm{\varepsilon} \sim \mathcal{N}(\bm{0}, \sigma^2\bm{I}_n),
 \end{equation}
-where $f$ denotes an unknown function, $\bm{\epsilon}$ is the noise vector, and
-$\bm{\sigma}^2$ is the noise variance. The goal is to use the observed data to
-build an estimator $\bm{\hat{y}}$ that approximates $f$.
-
-We can define a design matrix as $\bm{X} \in \mathbb{R}^{n \times p}$, where $n$
-is the number of instances and $p$ the number of parameters. We then also have
-$\bm{\theta} \in \mathbb{R}^p$, which is the vector of model parameters
-(weights). The predicted target values can then be expressed as
-$\tilde{\bm{y}} = \bm{X}\bm{\theta}$, where $\tilde{\bm{y}} \in \mathbb{R}^n$.
+where $\bm{f} = (f(x_0), \dots, f(x_{n-1}))^\top$ collects the values of an
+unknown function $f$ and the noise is i.i.d.\ Gaussian with variance
+$\sigma^2$. A polynomial model of degree $p$ is linear in its parameters: with
+the design matrix $\bm{X} \in \mathbb{R}^{n\times p}$ and
+the parameter vector $\bm{\theta}\in\mathbb{R}^{p}$, the prediction is
+$\tilde{\bm{y}} = \bm{X}\bm{\theta}$. Throughout, costs are normalized by $1/n$
+and penalties are added to this normalized cost; this is the convention of our
+code, and it fixes the meaning of $\lambda$ in all results.
 
 \subsubsection{Singular value decomposition}
-The singular value decomposition (SVD) is a powerful algorithm that allows us to
-decompose any matrix $\bm{X}$ into a diagonal matrix $\bm{\Sigma}$ and two
-orthogonal matrices, $\bm{U}$ and $\bm{V}$. The SVD can be expressed as
-\begin{equation}
-    \bm{X} = \bm{U\Sigma V^{\top}}.
-\end{equation}
-For a design matrix $\bm{X}$ of dimension $n \times p$, the matrix $\bm{U}$ is
-$n \times n$, $\bm{V}$ is $p \times p$, and $\bm{\Sigma}$ is $n \times p$ with
-$r = \min(n, p)$ singular values $\sigma_i \geq 0$ on the main diagonal and
-zeros elsewhere~\cite{hjorth-jensenMachineLearningPhysical2026}.
+Any matrix $\bm{X}$ can be factorized as
+$\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^\top$, with $\bm{U}$ and $\bm{V}$ orthogonal and
+$\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_0 \geq \sigma_1 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
+\sigma_{\max}/\sigma_{\min}$ is the 2-norm condition number of $\bm{X}$~\cite{hjorth-jensen_2026}.
+The monomial columns $x^j$ on $[-1,1]$ become nearly parallel as $j$ grows,
+so $\kappa_2(\bm{X})$ grows exponentially with the degree; this ill-conditioning
+is behind several of our numerical results.
 
 \subsubsection{Ordinary least squares}
-
-In ordinary least squares (OLS), the model parameters $\bm{\theta}$ are chosen
-such that the predicted values $\bm{X}\bm{\theta}$ are as close as possible to
-the observed response vector
-$\bm{y} \in \mathbb{R}^n$~\cite{mehtaHighbiasLowvarianceIntroduction2019}.
-This is achieved by minimizing the mean squared error (MSE),
+Ordinary least squares (OLS) chooses $\bm{\theta}$ to minimize the mean squared
+error~\cite{mehta_2019},
 \begin{equation}\label{eq:ols_cost}
-    C_\text{OLS}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{X}\bm{\theta}
-    - \bm{y} \right\rVert_2^2,
+    C_\text{OLS}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{y}
+    - \bm{X}\bm{\theta} \right\rVert_2^2 .
 \end{equation}
-where the factor $1/n$ does not affect the minimizer, but makes the objective
-independent of sample size. Formally, we can denote the solution to this problem
-as
-\begin{equation}
-    \bm{\hat{\theta}}_\text{OLS} = \underset{\bm{\theta}
-    \in \mathbb{R}^p}{\arg\min}
-    \left\lVert \bm{X}\bm{\theta} - \bm{y} \right\rVert_2^2,
-\end{equation}
-which after straightforward differentiation leads to the closed form equation
+The cost is convex, since its Hessian $\bm{H} = \frac{2}{n}\bm{X}^\top\bm{X}$ is
+positive semi-definite, so every stationary point is a global minimizer. Setting
+the gradient $\nabla_{\bm{\theta}} C_\text{OLS} = \frac{2}{n}\bm{X}^\top
+(\bm{X}\bm{\theta} - \bm{y})$ to zero gives the normal equations; if
+$\bm{X}$ has full column rank, the normal equations have the unique solution
 \begin{equation}\label{eq:ols-theta-hat}
-    \bm{\hat{\theta}}_\text{OLS} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}.
+    \hat{\bm{\theta}}_\text{OLS} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}.
 \end{equation}
-The objective is convex, since its Hessian $\frac{2}{n}\bm{X}^\top \bm{X}$ is
-positive semi-definite; any stationary point is therefore a global
-minimizer~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-The OLS estimator can also be expressed as
+If $\bm{X}$ is rank-deficient, $\bm{X}^\top\bm{X}$ is singular and the OLS
+minimizer is not unique. In this case, the Moore--Penrose pseudoinverse gives
+the minimum-norm OLS solution,
 \begin{equation}
-    \bm{\hat{\theta}}_\text{OLS} = \bm{X}^{+}\bm{y},
+    \hat{\bm{\theta}}_\text{OLS}
+    = \bm{X}^{+}\bm{y},
 \end{equation}
-where $\bm{X}^{+}$ denotes the Moore--Penrose pseudoinverse, which can be
-computed using SVD \cite{goodfellowDeepLearning2016}. This formulation is
-numerically more stable than solving the normal equations, since forming
-$\bm{X}^{\top}\bm{X}$ squares the condition number of $\bm{X}$, which can result
-in a substantial loss of numerical
-precision~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-% Check out Goodfellow et al (2016) Chapter 5.2.2 and Chapter 7, which covers
-% regularization. This may be relevant for introducting Ridge and Lasso
-% regression.
+where $\bm{X}^{+}$ denotes the Moore--Penrose pseudoinverse~\cite{goodfellow_2016}.
+We compute OLS this way as forming
+$\bm{X}^\top\bm{X}$ squares the condition number, which for our design matrices
+exhausts double precision at moderate degree~\cite{hjorth-jensen_2026}.
 
 \subsubsection{Ridge regression}
-
-By adding a regularizer defined as the $L_2$ norm of the the parameter vector to
-the cost function, we achieve the penalized regression problem called Ridge
-regression~\cite{mehtaHighbiasLowvarianceIntroduction2019}:
-\begin{equation}
-    \bm{\hat{\theta}}_{\text{Ridge}}(\lambda) = \underset{\bm{\theta}
-    \in \mathbb{R}^p}{\arg\min}
-    \left( \left\lVert \bm{X}\bm{\theta} - \bm{y} \right\rVert_2^2
-    + \lambda \left\lVert \bm{\theta} \right\rVert_2^2 \right).
+Ridge regression~\cite{hoerl_1970} adds an $\ell_2$ penalty to the cost function,
+\begin{equation}\label{eq:ridge_cost}
+    C_\text{Ridge}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{y}
+    - \bm{X}\bm{\theta} \right\rVert_2^2 + \lambda \lVert \bm{\theta} \rVert_2^2,
+    \qquad \lambda \geq 0,
 \end{equation}
-Differentiating with respect to $\bm{\theta}$ yields a matrix inversion problem
-similar to that of \cref{eq:ols-theta-hat}, but with a crucial difference: for
-any finite $\lambda$, the added term removes the singularity issues that OLS can
-encounter. The optimal parameters are then given by
+yielding the minimizer
 \begin{equation}\label{eq:ridge-theta-hat}
-    \bm{\hat{\theta}}_{\text{Ridge}}(\lambda) = (\bm{X^\top X}
-    + \lambda \bm{I})^{-1} \bm{X^\top y}.
+    \hat{\bm{\theta}}_{\text{Ridge}}(\lambda) = \left(\bm{X}^\top \bm{X}
+    + n\lambda \bm{I}\right)^{-1} \bm{X}^\top \bm{y}.
 \end{equation}
-This objective is strictly convex, meaning the minimum is unique, as the Hessian
-$\bm{X^{\top}X}+\lambda\bm{I}$ is positive definite for all
-$\lambda > 0$~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-Just as with OLS, the Ridge prediction can be written using the SVD,
+For $\lambda > 0$ the Hessian $\frac{2}{n}\bm{X}^\top\bm{X} + 2\lambda\bm{I}$
+is positive definite, so the cost is strictly convex and the minimizer unique
+for any $\bm{X}$, full rank or not. In terms of the SVD, the Ridge prediction is
 \begin{equation}
-    \bm{\tilde{y}}_{\text{Ridge}} = \left( \sum_{j=0}^{p-1} d_j\,
-    \bm{u}_j \bm{u}_j^{\top} \right) \bm{y},
+    \tilde{\bm{y}}_{\text{Ridge}} = \sum_{j} d_j\, \bm{u}_j \bm{u}_j^\top \bm{y},
+    \qquad
+    d_j = \frac{\sigma_j^2}{\sigma_j^2 + n\lambda},
+    \label{eq:ridge_scaling}
 \end{equation}
-where each direction $\bm{u}_j$ is scaled by the shrinkage factor
-\begin{equation}\label{eq:ridge_scaling}
-    d_j = \frac{\sigma_j^2}{\sigma_j^2 + n\lambda} \in (0, 1].
-\end{equation}
-If $n\lambda \gg \sigma_j^2$ for some direction $j$, then
-$d_j \approx \sigma_j^2/(n\lambda) \approx 0$, and that direction is almost
-completely suppressed. Conversely, if $n\lambda \ll \sigma_j^2$, the factor
-$d_j$ in \cref{eq:ridge_scaling} is just below one, and the direction is
-essentially retained as in OLS.
+with $d_j\in[0,1)$ for $\lambda>0$, whereas OLS has $d_j = 1$ for every $\sigma_j > 0$
+\cite{hastie_2017}. Directions with $\sigma_j^2 \ll
+n\lambda$ are suppressed, directions with $\sigma_j^2 \gg n\lambda$ are kept as in
+OLS. Ridge therefore suppresses precisely the directions associated with small
+singular values, which make the OLS solution sensitive to noise~\cite{hjorth-jensen_2026}.
 
-% The Ridge estimator scales the OLS estimate by the inverse factor of
-% $1+\lambda$, and the Ridge estimator converges to zero when $\lambda$ goes to
-% infinity (\textbf{\textit{at least -- and probably only -- when the design
-% matrix is orthonormal -- I should look more into this}}).
+We do not penalize the intercept: with standardized features
+it equals the mean of the training targets, and
+shrinking it would bias every prediction by the same amount.
 
 \subsubsection{Lasso regression}
-
-If we instead choose the $L_1$ norm for the regularizer, we obtain Lasso
-regression, defined as~\cite{hjorth-jensenMachineLearningPhysical2026}
+Lasso~\cite{tibshirani_1996} uses an $\ell_1$ penalty,
 \begin{equation}\label{eq:lasso-theta-hat}
-    \bm{\hat{\theta}}_{\text{Lasso}}(\lambda) = \underset{\bm{\theta}
-    \in \mathbb{R}^p}{\arg\min} \left( \left\lVert \bm{X}\bm{\theta}
-    - \bm{y} \right\rVert_2^2
-    + \lambda \left\lVert \bm{\theta} \right\rVert_1 \right).
+    C_\text{Lasso}(\bm{\theta}) = \underbrace{\frac{1}{n}\left\lVert \bm{y}
+    - \bm{X}\bm{\theta} \right\rVert_2^2}_{g(\bm{\theta})}
+    + \lambda \lVert \bm{\theta} \rVert_1 .
 \end{equation}
-Lasso stands for least absolute shrinkage and selection operator. Lasso has no
-closed form solution, and can thus not be solved by a matrix inversion such as
-\cref{eq:ols-theta-hat} and
-\cref{eq:ridge-theta-hat}~\cite{hjorth-jensenMachineLearningPhysical2026}.
-% Still a convex problem.
+The cost is convex but not differentiable where a coefficient is zero, and it
+has no closed-form minimizer. Its optimality condition is that $\bm{0}$ lies in
+the subdifferential, $\bm{0} \in \nabla g(\hat{\bm{\theta}}) + \lambda\,
+\partial\lVert\hat{\bm{\theta}}\rVert_1$, where $\partial|\theta_j| =
+\{\operatorname{sign}\theta_j\}$ for $\theta_j \neq 0$ and $[-1,1]$ for
+$\theta_j = 0$. A coefficient is therefore exactly zero whenever
+$|\partial g/\partial\theta_j| \leq \lambda$ at the solution, which is why Lasso
+selects variables while Ridge only shrinks them. Scikit-learn's \texttt{Lasso}
+minimizes $\frac{1}{2n}\lVert\bm{y}-\bm{X}\bm{w}\rVert_2^2 +
+\alpha\lVert\bm{w}\rVert_1$~\cite{pedregosa_2011},
+which has the same minimizer as \cref{eq:lasso-theta-hat} for $\alpha =
+\lambda/2$.
+
+\subsubsection{Error measures}
+We evaluate a prediction $\tilde{\bm{y}}$ of targets $\bm{y}$ by
+\begin{equation}
+    \mathrm{MSE} = \frac{1}{n}\sum_{i}(y_i-\tilde{y}_i)^2, \quad
+    R^2 = 1 - \frac{\sum_i (y_i - \tilde{y}_i)^2}{\sum_i (y_i - \bar{y})^2},
+\end{equation}
+with $\bar{y}$ the mean of $\bm{y}$. An unbiased model with no variance reaches
+$\mathrm{MSE} = \sigma^2$ in expectation; $R^2$ compares against predicting
+$\bar{y}$ and is negative for a model that does worse than that constant.
 
 \subsection{Bias--variance decomposition}
 \label{subsec:bias-variance}
-% full derivation (required here, part c)
 
-To decompose the bias--variance trade-off, we assume the data-generating process
-of \cref{eq:data_generating_process}. The prediction $\tilde{\bm{y}}$ is a
-random quantity because the parameters are fitted on a training set that is
-itself random~\cite{hjorth-jensenMachineLearningPhysical2026}. All expectations
-below are taken jointly over the noise $\bm{\varepsilon}$ on the test targets
-and over the draw of the training set (equivalently, in the bootstrap, over the
-resampled training sets).
+The prediction $\tilde{\bm{y}}$ at a fixed set of test inputs is a random
+quantity, because the parameters are fitted on a training set that is itself
+random. Below, $\mathbb{E}$ is taken jointly over the draw of the training set
+(in the bootstrap: over the resampled training sets) and over the noise
+$\bm{\varepsilon}$ on the test targets, which is independent of the training set
+\cite{hjorth-jensen_2026}. Squares of vectors are
+elementwise and averaged over the test points.
 
-Starting from the cost we wish to decompose (MSE) and adding and subtracting
-$\mathbb{E}[\tilde{\bm{y}}]$ inside the square,
-\begin{align}
+Adding and subtracting $\mathbb{E}[\tilde{\bm{y}}]$,
+\begin{equation}
     \mathbb{E}\!\left[(\bm{y}-\tilde{\bm{y}})^2\right]
-    &=\mathbb{E}\!\left[\left(\bm{f}+\bm{\varepsilon}
-                    -\tilde{\bm{y}}\right)^2\right]\nonumber\\
-    &=\mathbb{E}\!\left[\left(
-        (\bm{f}-\mathbb{E}[\tilde{\bm{y}}])
-        +(\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}})
-        +\bm{\varepsilon}
-    \right)^2\right].
-\end{align}
-Writing $a=\bm{f}-\mathbb{E}[\tilde{\bm{y}}]$,
-$b=\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}$ and $c=\bm{\varepsilon}$, the
-square expands into three squared terms and three cross terms,
-\begin{align}
-    \mathbb{E}\!\left[(a+b+c)^2\right]
-    &= \mathbb{E}[a^2]+\mathbb{E}[b^2]+\mathbb{E}[c^2] \notag\\
-    &\quad + 2\,\mathbb{E}[ab]+2\,\mathbb{E}[ac]+2\,\mathbb{E}[bc].
-\end{align}
-Consider the three cross terms:
-\begin{align}
-    \mathbb{E}[ab]
-    &=\left(\bm{f}-\mathbb{E}[\tilde{\bm{y}}]\right)
-    \mathbb{E}\!\left[\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}\right]=0,\\
-    \mathbb{E}[ac]
-    &=\left(\bm{f}-\mathbb{E}[\tilde{\bm{y}}]\right)\,\mathbb{E}[\bm{\varepsilon}]=0,\\
-    \mathbb{E}[bc]
-    &=\mathbb{E}\!\left[\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}\right]\mathbb{E}[\bm{\varepsilon}]=0,
-\end{align}
-where we used that $a$ is deterministic, that $\mathbb{E}[b]=\mathbb{E}[\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}]=\bm{0}$, that $\mathbb{E}[\bm{\varepsilon}]=\bm{0}$, and that $\bm{\varepsilon}$ is independent of both $\bm{f}$ and the training data (so it factors in $\mathbb{E}[bc]$). What remains is
+    =\mathbb{E}\!\left[\big(
+        \underbrace{\bm{f}-\mathbb{E}[\tilde{\bm{y}}]}_{a}
+        +\underbrace{\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}}_{b}
+        +\underbrace{\bm{\varepsilon}}_{c}
+    \big)^2\right].
+\end{equation}
+The cross terms vanish: $a$ is deterministic and $\mathbb{E}[b]=\bm{0}$, so
+$\mathbb{E}[ab]=a\,\mathbb{E}[b]=\bm{0}$; $\mathbb{E}[ac]=a\,\mathbb{E}[
+\bm{\varepsilon}]=\bm{0}$; and $\bm{\varepsilon}$ is independent of
+$\tilde{\bm{y}}$, so $\mathbb{E}[bc]=\mathbb{E}[b]\,\mathbb{E}[\bm{\varepsilon}]
+=\bm{0}$. What remains is
 \begin{equation}\label{eq:bias-variance-decomposition}
     \mathbb{E}\!\left[(\bm{y}-\tilde{\bm{y}})^2\right]
     =\underbrace{\left(\bm{f}-\mathbb{E}[\tilde{\bm{y}}]\right)^2}_{\mathrm{Bias}^2[\tilde{\bm{y}}]}
     +\underbrace{\mathbb{E}\!\left[\left(\tilde{\bm{y}}-\mathbb{E}[\tilde{\bm{y}}]\right)^2\right]}_{\mathrm{Var}[\tilde{\bm{y}}]}
     +\sigma^2 .
 \end{equation}
-In practice we report the sample averages over $n$ test points,
+Averaged over $m$ test points,
 \begin{align}
     \mathrm{Bias}^2[\tilde{\bm{y}}]
-    &= \frac{1}{n}\sum_i\left(f_i
-    - \mathbb{E}[\tilde{y}_i]\right)^2, \label{eq:bias-term}\\
+    &= \frac{1}{m}\sum_i\left(f_i - \mathbb{E}[\tilde{y}_i]\right)^2,
+    \label{eq:bias-term}\\
     \mathrm{Var}[\tilde{\bm{y}}]
-    &= \frac{1}{n}\sum_i\left(\tilde{y}_i
-    - \mathbb{E}[\tilde{y}_i]\right)^2, \label{eq:var-term}
+    &= \frac{1}{m}\sum_i\mathbb{E}\!\left[\left(\tilde{y}_i
+    - \mathbb{E}[\tilde{y}_i]\right)^2\right], \label{eq:var-term}
 \end{align}
-with $\mathbb{E}[\tilde{y}_i]$ estimated by averaging the prediction at point
-$i$ over the bootstrap replicates.
+where we estimate $\mathbb{E}[\tilde{y}_i]$ and the inner expectation of
+\cref{eq:var-term} by averages over the bootstrap replicates.
 
-The three terms have distinct meanings. The \emph{bias} measures how far the
-average model prediction is from the true function $f$: it is large when the
-model is too rigid to represent $f$ (low polynomial degree). The \emph{variance}
-measures how much the prediction fluctuates around its own mean as the training
-set changes: it grows with model complexity. The \emph{noise variance}
-$\sigma^2$ is irreducible and sets a floor on the achievable test
-error~\cite{hjorth-jensenMachineLearningPhysical2026}.
+The bias measures how far the average prediction is from $f$; it is large when
+the model is too rigid to represent $f$. The variance measures how much the
+prediction fluctuates when the training set changes; it grows with model
+complexity. The noise variance $\sigma^2$ is irreducible and is a floor for the
+expected test error~\cite{hjorth-jensen_2026}.
 
-Since $f$ is unknown, we cannot evaluate the bias directly and replace $\bm{f}$
-by the observed targets $\bm{y}=\bm{f}+\bm{\varepsilon}$. The measured bias then
-becomes
+Since $f$ is unknown in practice, the bias is usually measured against the
+observed targets $\bm{y}=\bm{f}+\bm{\varepsilon}$. Because $\bm{\varepsilon}$
+has mean zero and is independent of $\tilde{\bm{y}}$,
 \begin{equation}\label{eq:measured-bias}
-    \frac{1}{n}\sum_i\mathbb{E}[(y_i-\mathbb{E}[\tilde{y}_i])^2]
+    \frac{1}{m}\sum_i\mathbb{E}\!\left[(y_i-\mathbb{E}[\tilde{y}_i])^2\right]
     =\mathrm{Bias}^2[\tilde{\bm{y}}]+\sigma^2,
 \end{equation}
-so the estimated bias absorbs the noise variance: the measured
-$\mathrm{Bias}^2+\mathrm{Var}$ sums to the full test MSE, with $\sigma^2$ folded
-into the bias rather than appearing as a separate
-term~\cite{hjorth-jensenMachineLearningPhysical2026}.
+so the measured bias absorbs the noise variance, and the measured
+$\mathrm{Bias}^2+\mathrm{Var}$ adds up to the full test MSE. Since our data are
+synthetic, we report both versions.
 
 \subsection{Resampling methods}
+\label{subsec:resampling}
 
-The standard situation in machine learning research is one where you have
-limited access to data -- as opposed to our situation where we can easily
-generate more as we know $f$.
-
-Resampling methods are statistical techniques that repeatedly draw new random
-samples from an existing dataset.
+A single train--test split gives one realization of the test error; its
+variance can be large when the test set is small. Resampling methods reuse the
+available data to estimate the expected test error of a model, and to choose
+between models, without collecting new data.
 
 \subsubsection{Bootstrap}
+The bootstrap~\cite{efron_1979} approximates the
+distribution of the training sets by the empirical distribution of the one
+training set we have: we draw $B$ training sets of the same size $n_\text{tr}$
+with replacement, refit the model on each, and predict on a fixed test set. The
+spread of the $B$ predictions estimates $\mathrm{Var}[\tilde{\bm{y}}]$, their
+mean estimates $\mathbb{E}[\tilde{\bm{y}}]$ in \cref{eq:bias-term}, and the
+average squared error estimates the test MSE. A bootstrap sample contains on
+average only a fraction $1-(1-1/n_\text{tr})^{n_\text{tr}} \approx 1 - e^{-1}
+\approx 0.632$ of the distinct training points, so every bootstrap fit is made
+from effectively fewer points than the fit on the full training
+set~\cite{hastie_2017}.
 
-\subsubsection{k-fold cross-validation}
-
-% Goodfellow et al. (2016) Chapter 5.3.1 covers cross-validation
-
-In $k$-fold cross-validation, the dataset is partitioned into $k$ folds, and the
-model is trained $k$ separate times, each time leaving out a different fold for
-evaluation~\cite{geronHandsonMachineLearning2023}.
-
-This is commonly used in order to select hyperparameters, such as the penalty
-parameter $\lambda$ in Ridge regression, in which you choose the value that
-minimize the average estimate of the prediction error over the
-folds~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-\subsection{Automatic differentiation and backpropagation}
-% Where do we discuss/introduce backpropagation and automatic differentiation?
-
-\subsection{Gradient descent}
-
-% The stability bound is set by lambda max and the convergence rate by lambda
-% min. When they differ by orders of magnitude, the step that is barely safe
-% along the steep direction is hopelessly small along the flat one. Steep
-% coordinates need small steps; flat coordinates could take large ones.
-
-%\[
-%    \kappa(\bm{H}) = \kappa_2(\bm{X})^2
-%\]
-
-For optimization problems where an analytical (closed-form) solution is
-unavailable, numerical optimization methods can be used to iteratively approach
-a minimum of the cost function. One such method is Newton's method, which uses
-both the gradient and the Hessian:
-\begin{equation}\label{eq:newtons_method}
-    \bm{\theta}^{(k+1)}
-    =
-    \bm{\theta}^{(k)}
-    -
-    \bm{H}^{-1}
-    \nabla_{\bm{\theta}}
-    C\!\left(\bm{\theta}^{(k)}\right).
+\subsubsection{\texorpdfstring{$k$}{k}-fold cross-validation}
+In $k$-fold cross-validation (CV), the data are split into $k$ disjoint folds of
+(almost) equal size. The model is trained $k$ times, each time on $k-1$ folds,
+and evaluated on the held-out fold~\cite{geron_2023}. The
+CV estimate of the test error is the mean of the $k$ fold errors,
+\begin{equation}\label{eq:cv}
+    \mathrm{CV}_k = \frac{1}{k}\sum_{\ell=1}^{k}\mathrm{MSE}\big(
+    \bm{y}_{\ell}, \tilde{\bm{y}}_{\ell}^{(-\ell)}\big),
 \end{equation}
-However, Newton's method requires computing and manipulating the Hessian. For a
-model with $p$ parameters, the Hessian contains $p^2$ entries and inverting it
-costs $\mathcal{O}(p^3)$, making it impractical to store and manipulate for
-large-scale models~\cite{hjorth-jensenMachineLearningPhysical2026}.
+where $\tilde{\bm{y}}_{\ell}^{(-\ell)}$ is the prediction for fold $\ell$ of the
+model trained without it. We select hyperparameters (the degree $p$ and
+$\lambda$) by minimizing $\mathrm{CV}_k$ over a
+grid~\cite{hjorth-jensen_2026}. Every step that learns
+from the data, in our case the standardization of the features, must be fitted
+on the $k-1$ training folds only; otherwise information from the held-out fold
+leaks into the model and the estimate is biased
+downwards~\cite{hastie_2017}. Larger $k$ trains on
+more data per fit ($1-1/k$ of it), which reduces the pessimistic bias of the
+estimate, at the price of $k$ fits.
 
-Gradient descent provides a computationally simpler alternative by updating the
-parameters using only the gradient: % Newton's method costs
-% $\mathcal{O}(p^3)$~\cite{hjorth-jensenMachineLearningPhysical2026}
+\subsection{Gradient-based optimization}
+\label{subsec:gradient-descent}
+
+\subsubsection{Gradient descent}
+For a differentiable cost $C(\bm{\theta})$, gradient descent (GD) iterates
 \begin{equation}\label{eq:gd_basic}
-    \bm{\theta}^{(k+1)}
-    =
-    \bm{\theta}^{(k)}
-    -
-    \gamma
-    \nabla_{\bm{\theta}}
-    C\!\left(\bm{\theta}^{(k)}\right),
+    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \gamma
+    \nabla_{\bm{\theta}} C\big(\bm{\theta}^{(k)}\big),
 \end{equation}
-where $\gamma>0$ is the learning rate which replaces the Hessian. This makes
-gradient descent particularly suitable for large-scale machine-learning models,
-such as neural networks, where the cost function is generally nonlinear and does
-not have a closed-form solution.
+with learning rate $\gamma > 0$. Newton's method,
+$\bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \bm{H}^{-1}\nabla_{\bm{\theta}}
+C(\bm{\theta}^{(k)})$, would solve a quadratic cost in one step, but forming and
+inverting the $q\times q$ Hessian costs $\mathcal{O}(q^3)$ for $q$ parameters;
+GD replaces $\bm{H}^{-1}$ by $\gamma\bm{I}$ and costs one gradient evaluation
+per iteration~\cite{hjorth-jensen_2026}.
+
+For the quadratic OLS and Ridge costs the analysis is exact. The error
+$\bm{e}^{(k)} = \bm{\theta}^{(k)} - \hat{\bm{\theta}}$ obeys
+$\bm{e}^{(k+1)} = (\bm{I} - \gamma\bm{H})\,\bm{e}^{(k)}$, so along the
+eigenvector of $\bm{H}$ with eigenvalue $\lambda_i$ the error is multiplied by
+$1-\gamma\lambda_i$ in each step. The iteration converges from any starting
+point if and only if $|1-\gamma\lambda_i| < 1$ for all $i$ with
+$\lambda_i > 0$, that is
+\begin{equation}\label{eq:gd_stability}
+    0 < \gamma < \frac{2}{\lambda_{\max}(\bm{H})}.
+\end{equation}
+The slowest direction contracts by $1-\gamma\lambda_{\min}$, so with
+$\gamma = 1/\lambda_{\max}$ reaching a relative accuracy $\epsilon$ takes about
+$\kappa(\bm{H})\ln(1/\epsilon)$ iterations, where $\kappa(\bm{H}) =
+\lambda_{\max}/\lambda_{\min} = \kappa(\bm{X})^2$ for OLS. For Ridge with
+centered features, an unpenalized intercept and $\lambda \leq 1$,
+$\lambda_{\min} \geq 2\lambda$, so $\kappa(\bm{H}) \leq \lambda_{\max}/(2\lambda)$
+however ill-conditioned $\bm{X}$ is.
 
 \subsubsection{Momentum}
-
-The convergence of gradient descent can be improved by adding a momentum term,
-which carries over part of the previous parameter update. The resulting update
-rule is
+Momentum adds a fraction of the previous step,
 \begin{equation}\label{eq:gd_momentum}
-    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} -
-    \gamma \nabla_{\bm{\theta}} C\!\left(\bm{\theta}^{(k)}\right)
-    + \delta\!\left[\bm{\theta}^{(k)} - \bm{\theta}^{(k-1)}\right],
+    \bm{v}^{(k)} = \beta\bm{v}^{(k-1)} + \gamma\nabla_{\bm{\theta}}
+    C\big(\bm{\theta}^{(k)}\big), \qquad
+    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \bm{v}^{(k)},
 \end{equation}
-where $\delta \in [0, 1]$ is the momentum parameter. This is known for
-accelerating learning, especially in of high curvature, small but consistent
-gradients, or noisy gradients. Momentum is mainly intended to address two
-issues: ill-conditioning of the Hessian matrix and variance in the stochastic
-gradient~\cite{goodfellowDeepLearning2016}. % Momentum amplifies the consistent
-% and cancels the oscillatory~\cite{hjorth-jensenMachineLearningPhysical2026}.
-% ``The method accelerates precisely where plain gradient descent
-% crawls.~\cite{hjorth-jensenMachineLearningPhysical2026}''
+with $\beta\in[0,1)$ and $\bm{v}^{(0)} = \bm{0}$. Along directions where the
+gradient keeps its sign the steps accumulate, while oscillations across a narrow
+valley partly cancel; this is what makes momentum effective for ill-conditioned
+Hessians~\cite{goodfellow_2016}.
+
+\subsubsection{Adaptive learning rates}
+AdaGrad~\cite{duchi_2011} scales every coordinate by the
+accumulated squared gradients,
+\begin{align}
+    \bm{r}^{(k)} &= \bm{r}^{(k-1)} + \bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+    \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \frac{\gamma}{\sqrt{\bm{r}^{(k)}}
+    + \epsilon}\odot\bm{g}^{(k)},
+\end{align}
+where $\bm{g}^{(k)}$ is the gradient, $\odot$ the elementwise product, and the
+square root and division are elementwise. The effective step of each coordinate
+decreases monotonically. RMSprop replaces the sum by an exponentially decaying
+average, $\bm{v}^{(k)} = \rho\bm{v}^{(k-1)} + (1-\rho)\,\bm{g}^{(k)}\odot
+\bm{g}^{(k)}$, so the step size can recover~\cite{goodfellow_2016}.
+Adam~\cite{kingma_2017} combines a decaying average of the
+gradient (momentum) with RMSprop's scaling and corrects both for their
+initialization at zero:
+\begin{align}
+    \bm{m}^{(k)} &= \beta_1\bm{m}^{(k-1)} + (1-\beta_1)\,\bm{g}^{(k)}, \\
+    \bm{v}^{(k)} &= \beta_2\bm{v}^{(k-1)} + (1-\beta_2)\,\bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+    \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \gamma\,
+    \frac{\bm{m}^{(k)}/(1-\beta_1^{k})}{\sqrt{\bm{v}^{(k)}/(1-\beta_2^{k})}+\epsilon}.
+\end{align}
+We use $\beta = 0.9$ for momentum, $\rho = 0.9$ for RMSprop, $\beta_1 = 0.9$,
+$\beta_2=0.999$ for Adam, and $\epsilon=10^{-8}$. Because Adam divides by the
+running root-mean-square gradient, its step does not shrink in proportion to the
+gradient near the minimum; with a fixed $\gamma$ it can keep taking steps of
+order $\gamma$ there.
 
 \subsubsection{Stochastic gradient descent}
-% Goodfellow et al. (2016) Chapter 5.9 and Hjorth-Jensen Chapter 4.7
+For a cost that is an average over the data, $C(\bm{\theta}) = \frac{1}{n}
+\sum_i c_i(\bm{\theta})$, stochastic gradient descent (SGD) replaces the full
+gradient by the average over a mini-batch $\mathcal{B}_k$ of $M$ points,
+\begin{equation}
+    \bm{g}^{(k)} = \frac{1}{M}\sum_{i\in\mathcal{B}_k}\nabla_{\bm{\theta}}
+    c_i\big(\bm{\theta}^{(k)}\big),
+\end{equation}
+an unbiased estimate of the full gradient~\cite{goodfellow_2016}. We
+shuffle the training set once per epoch and split it into $\lceil n_\text{tr}/M
+\rceil$ mini-batches, so one epoch costs the same number of floating-point
+operations as one full-batch step but makes $\lceil n_\text{tr}/M\rceil$
+updates. The gradient noise does not vanish at the minimum, so with a fixed
+learning rate the iterates fluctuate around it; a decaying learning rate,
+here $\gamma_t = \gamma_0/(1+ \delta t)$ with $t$ the number of updates, damps
+these fluctuations~\cite{hjorth-jensen_2026}. Any of the
+update rules above can be applied to $\bm{g}^{(k)}$.
 
-For a cost $C(\bm{\theta}) = \frac{1}{n}\sum_{i=1}^{n} c_i(\bm{\theta})$, the
-full gradient requires a pass over all $n$ data points per iteration, which is
-expensive for large $n$~\cite{hjorth-jensenMachineLearningPhysical2026}.
-Stochastic gradient descent (SGD) instead uses a mini-batch $\mathcal{B}_k$ of
-$m$ examples i.i.d. sampled from the data, giving the unbiased gradient
-estimate~\cite{goodfellowDeepLearning2016}
-\[
-    \bm{g}^{(k)} = \frac{1}{m} \sum_{i \in \mathcal{B}_k}
-    \nabla_{\bm{\theta}} c_i(\bm{\theta}^{(k)}),
-    \qquad
-    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \gamma \bm{g}^{(k)},
-\]
-where $\bm{g}^{(k)}$ is the gradient of the cost function at iteration $k$.
+\subsubsection{Gradient descent for Lasso}
+Since \cref{eq:lasso-theta-hat} is not differentiable at $\theta_j = 0$, its
+gradient is not defined there. The \emph{subgradient method} replaces the
+derivative of $|\theta_j|$ by an element of the subdifferential
+$\partial|\theta_j|$, i.e.\ it uses
+\begin{equation}\label{eq:lasso_subgradient}
+    \bm{g}(\bm{\theta}) = \frac{2}{n}\bm{X}^\top(\bm{X}\bm{\theta}-\bm{y})
+    + \lambda\operatorname{sign}(\bm{\theta}),
+\end{equation}
+with $\operatorname{sign}(0) = 0$ (the minimal-norm choice) and no penalty on the
+intercept, in place of the gradient in any of the update rules above. Unlike GD
+on a smooth cost, the subgradient method with a fixed step does not converge to
+the minimizer, only to a neighborhood of it whose size is proportional to the
+step: every nonzero coefficient receives a push of magnitude $\gamma\lambda$
+towards zero in each step, so a coefficient whose optimal value is zero
+oscillates around zero instead of reaching it. Exact zeros, the defining
+property of the Lasso solution, therefore appear only by coincidence.
 
-The sampling noise prevents SGD from converging exactly to the minimum; instead,
-the iterates fluctuate around it with a spread scaling as $\sqrt{\gamma / m}$.
-This can be reduced by increasing $m$, at a higher cost per iteration, or by
-gradually decreasing $\gamma$ during training, known as learning rate
-scheduling~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-\subsubsection{AdaGrad}
-
-AdaGrad, introduced by \textcite{duchiAdaptiveSubgradientMethods}, adapts the
-step size of each coordinate individually by accumulating the squared gradients,
-\[
-    \bm{r}^{(k)} = \bm{r}^{(k-1)} + \bm{g}^{(k)} \odot \bm{g}^{(k)},
-    \qquad \bm{r}^{(0)} = \bm{0},
-\]
-where $\odot$ denotes the Hadamard product. The parameters are then updated as
-\[
-    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)}
-    - \frac{\gamma}{\sqrt{\bm{r}^{(k)}} + \epsilon} \odot \bm{g}^{(k)},
-\]
-with the square root and division taken element-wise, and $\epsilon$ a small
-constant for numerical stability. Coordinate $j$ thus has the effective step
-size given by
-\[
-    \frac{\gamma} {\sqrt{r_{j}^{(k)}} + \epsilon},
-\]
-which decreases monotonically as gradients
-accumulate~\cite{hjorth-jensenMachineLearningPhysical2026}. Coordinates with
-large past gradients therefore take smaller steps, while rarely updated
-coordinates take larger steps~\cite{goodfellowDeepLearning2016}.
-
-\subsubsection{RMSProp}
-% Introduced in Tieleman & Hinton (2012), Coursera Lecture 6.5;
-% see also Goodfellow et al. (2016) Sec. 8.5.2
-
-Since AdaGrad accumulates all past squared gradients, its effective step size
-decreases monotonically, which can halt learning prematurely. RMSProp addresses
-this by replacing the cumulative sum with an exponentially decaying
-average~\cite{goodfellowDeepLearning2016},
-\[
-    \bm{v}^{(k)} = \rho\, \bm{v}^{(k-1)} + (1-\rho)\,
-    \bm{g}^{(k)} \odot \bm{g}^{(k)},
-    \qquad \bm{v}^{(0)} = \bm{0},
-\]
-where $\rho \in [0, 1)$ is the decay rate, typically $0.9$ or $0.99$, giving an
-effective memory of about $1/(1-\rho)$ iterations. The parameters are updated as
-\[
-    \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)}
-    - \frac{\gamma}{\sqrt{\bm{v}^{(k)}} + \epsilon} \odot \bm{g}^{(k)},
-\]
-with the square root and division taken
-element-wise~\cite{hjorth-jensenMachineLearningPhysical2026}.
-
-\subsubsection{Adam}
-
-\cite{kingmaAdamMethodStochastic2017}
-
-% Learning rate decay?
+\subsubsection{Automatic differentiation}
+Automatic differentiation (AD) computes derivatives of a function given as a
+program by applying the chain rule to the sequence of elementary operations the
+program executes~\cite{baydin_2018}. It is
+neither symbolic differentiation, which manipulates expressions and can produce
+exponentially large derivative expressions, nor numerical differentiation, whose
+finite differences carry truncation and round-off errors: AD evaluates the
+derivative exactly up to floating-point round-off, at a specific input. In
+reverse mode, which JAX's \texttt{grad} uses for a scalar cost, the program is
+run forward once while storing intermediate values, and derivatives are then
+propagated backwards; the full gradient costs a small constant multiple of one
+evaluation of the cost, independent of the number of
+parameters~\cite{baydin_2018}. At a point where
+the function is not differentiable, AD returns the derivative of whichever
+branch the program takes; for $|\theta|$ at $\theta=0$, JAX returns $1$, which
+is an element of $\partial|\theta| = [-1,1]$ and hence a valid subgradient,
+although not the minimal-norm one ($0$).

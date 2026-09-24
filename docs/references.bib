@@ -1,4 +1,4 @@
-@article{baydinAutomaticDifferentiationMachine2018,
+@article{baydin_2018,
   title = {Automatic {{Diﬀerentiation}} in {{Machine Learning}}: A {{Survey}}},
   author = {Baydin, Atılım Gunes and Pearlmutter, Barak A and Radul, Alexey Andreyevich and Siskind, Jeffrey Mark},
   date = {2018},
@@ -11,7 +11,21 @@
   file = {/Users/sigurdriseth/Zotero/storage/YSTFA4Z5/Baydin et al. - Automatic Diﬀerentiation in Machine Learning a Survey.pdf}
 }
 
-@book{bishopPatternRecognitionMachine2006,
+@article{beck_2009,
+  title = {A Fast Iterative Shrinkage-Thresholding Algorithm for Linear Inverse Problems},
+  author = {Beck, Amir and Teboulle, Marc},
+  date = {2009},
+  journaltitle = {SIAM Journal on Imaging Sciences},
+  volume = {2},
+  number = {1},
+  eprint = {https://doi.org/10.1137/080716542},
+  pages = {183--202},
+  doi = {10.1137/080716542},
+  url = {https://doi.org/10.1137/080716542},
+  abstract = {Abstract. We consider the class of iterative shrinkage-thresholding algorithms (ISTA) for solving linear inverse problems arising in signal/image processing. This class of methods, which can be viewed as an extension of the classical gradient algorithm, is attractive due to its simplicity and thus is adequate for solving large-scale problems even with dense matrix data. However, such methods are also known to converge quite slowly. In this paper we present a new fast iterative shrinkage-thresholding algorithm (FISTA) which preserves the computational simplicity of ISTA but with a global rate of convergence which is proven to be significantly better, both theoretically and practically. Initial promising numerical results for wavelet-based image deblurring demonstrate the capabilities of FISTA which is shown to be faster than ISTA by several orders of magnitude.}
+}
+
+@book{bishop_2006,
   title = {Pattern Recognition and Machine Learning},
   author = {Bishop, Christopher M.},
   date = {2006},
@@ -23,7 +37,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/IHEXI45V/Bishop - 2006 - Pattern recognition and machine learning.pdf}
 }
 
-@software{bradburyJAXComposableTransformations2018,
+@software{bradbury_2018,
   title = {{{JAX}}: Composable Transformations of {{Python}}+{{NumPy}} Programs},
   author = {Bradbury, James and Frostig, Roy and Hawkins, Peter and Johnson, Matthew James and Katariya, Yash and Leary, Chris and Maclaurin, Dougal and Necula, George and Paszke, Adam and VanderPlas, Jake and Wanderman-Milne, Skye and Zhang, Qiao},
   date = {2018},
@@ -31,7 +45,7 @@
   version = {0.3.13}
 }
 
-@book{deisenrothMathematicsMachineLearning,
+@book{deisenroth_2020,
   title = {Mathematics for {{Machine Learning}}},
   author = {Deisenroth, Marc Peter and Faisal, A Aldo and Ong, Cheng Soon},
   date = {2020},
@@ -41,7 +55,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/SHCBPZF5/Deisenroth et al. - 2020 - Mathematics for Machine Learning.pdf}
 }
 
-@article{demarchiPolynomialInterpolationMapped2020,
+@article{demarchi_2020,
   title = {Polynomial Interpolation via Mapped Bases without Resampling},
   author = {De Marchi, S. and Marchetti, F. and Perracchione, E. and Poggiali, D.},
   date = {2020-01},
@@ -58,15 +72,38 @@
   file = {/Users/sigurdriseth/Zotero/storage/NYEDCQC8/De Marchi et al. - 2020 - Polynomial interpolation via mapped bases without resampling.pdf}
 }
 
-@article{duchiAdaptiveSubgradientMethods,
-  title = {Adaptive {{Subgradient Methods}} for {{Online Learning}} and {{Stochastic Optimization}}},
+@article{duchi_2011,
+  title = {Adaptive Subgradient Methods for Online Learning and Stochastic Optimization},
   author = {Duchi, John and Hazan, Elad and Singer, Yoram},
-  abstract = {We present a new family of subgradient methods that dynamically incorporate knowledge of the geometry of the data observed in earlier iterations to perform more informative gradient-based learning. Metaphorically, the adaptation allows us to find needles in haystacks in the form of very predictive but rarely seen features. Our paradigm stems from recent advances in stochastic optimization and online learning which employ proximal functions to control the gradient steps of the algorithm. We describe and analyze an apparatus for adaptively modifying the proximal function, which significantly simplifies setting a learning rate and results in regret guarantees that are provably as good as the best proximal function that can be chosen in hindsight. We give several efficient algorithms for empirical risk minimization problems with common and important regularization functions and domain constraints. We experimentally study our theoretical analysis and show that adaptive subgradient methods outperform state-of-the-art, yet non-adaptive, subgradient algorithms.},
-  langid = {english},
-  file = {/Users/sigurdriseth/Zotero/storage/LYZZ3QUI/Duchi et al. - Adaptive Subgradient Methods for Online Learning and Stochastic Optimization.pdf}
+  date = {2011},
+  journaltitle = {Journal of Machine Learning Research},
+  volume = {12},
+  number = {61},
+  pages = {2121--2159},
+  url = {http://jmlr.org/papers/v12/duchi11a.html}
 }
 
-@book{geronHandsonMachineLearning2023,
+@article{efron_1979,
+  title = {Bootstrap {{Methods}}: {{Another Look}} at the {{Jackknife}}},
+  shorttitle = {Bootstrap {{Methods}}},
+  author = {Efron, B.},
+  date = {1979-01},
+  journaltitle = {The Annals of Statistics},
+  volume = {7},
+  number = {1},
+  pages = {1--26},
+  publisher = {Institute of Mathematical Statistics},
+  issn = {0090-5364, 2168-8966},
+  doi = {10.1214/aos/1176344552},
+  url = {https://projecteuclid.org/journals/annals-of-statistics/volume-7/issue-1/Bootstrap-Methods-Another-Look-at-the-Jackknife/10.1214/aos/1176344552.full},
+  urldate = {2026-09-23},
+  abstract = {We discuss the following problem: given a random sample \$\textbackslash mathbf\{X\} = (X\_1, X\_2, \textbackslash cdots, X\_n)\$ from an unknown probability distribution \$F\$, estimate the sampling distribution of some prespecified random variable \$R(\textbackslash mathbf\{X\}, F)\$, on the basis of the observed data \$\textbackslash mathbf\{x\}\$. (Standard jackknife theory gives an approximate mean and variance in the case \$R(\textbackslash mathbf\{X\}, F) = \textbackslash theta(\textbackslash hat\{F\}) - \textbackslash theta(F), \textbackslash theta\$ some parameter of interest.) A general method, called the "bootstrap," is introduced, and shown to work satisfactorily on a variety of estimation problems. The jackknife is shown to be a linear approximation method for the bootstrap. The exposition proceeds by a series of examples: variance of the sample median, error rates in a linear discriminant analysis, ratio estimation, estimating regression parameters, etc.},
+  langid = {english},
+  keywords = {62G05,62G15,62H30,62J05,bootstrap,discriminant analysis,error rate estimation,jackknife,Nonlinear regression,nonparametric variance estimation,Resampling,subsample values},
+  file = {/Users/sigurdriseth/Zotero/storage/TMKJ65W9/Efron - 1979 - Bootstrap Methods Another Look at the Jackknife.pdf}
+}
+
+@book{geron_2023,
   title = {Hands-on Machine Learning with {{Scikit-Learn}}, {{Keras}}, and {{TensorFlow}}: Concepts, Tools, and Techniques to Build Intelligent Systems},
   shorttitle = {Hands-on Machine Learning with {{Scikit-Learn}}, {{Keras}}, and {{TensorFlow}}},
   author = {Géron, Aurélien},
@@ -81,7 +118,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/XWIVMVJF/Géron - 2023 - Hands-on machine learning with Scikit-Learn, Keras, and TensorFlow concepts, tools, and techniques.pdf}
 }
 
-@book{goodfellowDeepLearning2016,
+@book{goodfellow_2016,
   title = {Deep {{Learning}}},
   author = {Goodfellow, Ian and Bengio, Yoshua and Courville, Aaron},
   date = {2016},
@@ -91,7 +128,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/WV4KDLTQ/www.deeplearningbook.org.html}
 }
 
-@article{harrisArrayProgrammingNumPy2020,
+@article{harris_2020,
   title = {Array Programming with {{NumPy}}},
   author = {Harris, Charles R. and Millman, K. Jarrod and Van Der Walt, Stéfan J. and Gommers, Ralf and Virtanen, Pauli and Cournapeau, David and Wieser, Eric and Taylor, Julian and Berg, Sebastian and Smith, Nathaniel J. and Kern, Robert and Picus, Matti and Hoyer, Stephan and Van Kerkwijk, Marten H. and Brett, Matthew and Haldane, Allan and Del Río, Jaime Fernández and Wiebe, Mark and Peterson, Pearu and Gérard-Marchant, Pierre and Sheppard, Kevin and Reddy, Tyler and Weckesser, Warren and Abbasi, Hameer and Gohlke, Christoph and Oliphant, Travis E.},
   date = {2020-09-17},
@@ -109,7 +146,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/XFM8WIH6/Harris et al. - 2020 - Array programming with NumPy.pdf}
 }
 
-@book{hastieElementsStatisticalLearning2017,
+@book{hastie_2017,
   title = {The Elements of Statistical Learning: Data Mining, Inference, and Prediction},
   shorttitle = {The Elements of Statistical Learning},
   author = {Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome H.},
@@ -124,7 +161,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/JWUJBU48/Hastie et al. - 2017 - The elements of statistical learning data mining, inference, and prediction.pdf}
 }
 
-@book{hjorth-jensenMachineLearningPhysical2026,
+@book{hjorth-jensen_2026,
   title = {Machine {{Learning}} and the {{Physical Sciences}}: {{From Discriminative}} Methods to Generative Methods and Reinforcement Learning},
   author = {Hjorth-Jensen, Morten},
   date = {2026-10-09},
@@ -133,7 +170,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/V68MLNJ8/Hjorth-Jensen - 2026 - Machine Learning and the Physical Sciences From Discriminative methods to generative methods and re.pdf}
 }
 
-@article{hoerlRidgeRegressionBiased1970,
+@article{hoerl_1970,
   title = {Ridge {{Regression}}: {{Biased Estimation}} for {{Nonorthogonal Problems}}},
   shorttitle = {Ridge {{Regression}}},
   author = {Hoerl, Arthur E. and Kennard, Robert W.},
@@ -150,7 +187,7 @@
   abstract = {In multiple regression it is shown that parameter estimates based on minimum residual sum of squares have a high probability of being unsatisfactory, if not incorrect, if the prediction vectors are not orthogonal. Proposed is an estimation procedure based on adding small positive quantities to the diagonal of X′X. Introduced is the ridge trace, a method for showing in two dimensions the effects of nonorthogonality. It is then shown how to augment X′X to obtain biased estimates with smaller mean square error.}
 }
 
-@online{kingmaAdamMethodStochastic2017,
+@online{kingma_2017,
   title = {Adam: {{A Method}} for {{Stochastic Optimization}}},
   shorttitle = {Adam},
   author = {Kingma, Diederik P. and Ba, Jimmy},
@@ -167,7 +204,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/ZL4BGPVQ/Kingma and Ba - 2017 - Adam A Method for Stochastic Optimization.pdf;/Users/sigurdriseth/Zotero/storage/MDZWW9VW/1412.html}
 }
 
-@article{mehtaHighbiasLowvarianceIntroduction2019,
+@article{mehta_2019,
   title = {A High-Bias, Low-Variance Introduction to {{Machine Learning}} for Physicists},
   author = {Mehta, Pankaj and Bukov, Marin and Wang, Ching-Hao and Day, Alexandre G. R. and Richardson, Clint and Fisher, Charles K. and Schwab, David J.},
   date = {2019-05},
@@ -184,7 +221,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/SYK3IR8G/Mehta et al. - 2019 - A high-bias, low-variance introduction to Machine Learning for physicists.pdf;/Users/sigurdriseth/Zotero/storage/BF3S95PK/1803.html}
 }
 
-@book{murphyProbabilisticMachineLearning2025,
+@book{murphy_2025,
   title = {Probabilistic Machine Learning: An Introduction},
   shorttitle = {Probabilistic Machine Learning},
   author = {Murphy, Kevin P.},
@@ -200,7 +237,7 @@
   file = {/Users/sigurdriseth/Zotero/storage/88IW4ZS9/Murphy - 2025 - Probabilistic machine learning an introduction.pdf}
 }
 
-@article{pedregosaScikitlearnMachineLearning2011,
+@article{pedregosa_2011,
   title = {Scikit-Learn: {{Machine Learning}} in {{Python}}},
   author = {Pedregosa, Fabian and Varoquaux, Gaël and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and Duchesnay, Édouard},
   date = {2011},
@@ -211,7 +248,7 @@
   url = {http://jmlr.org/papers/v12/pedregosa11a.html}
 }
 
-@book{raschkaMachineLearningPyTorch2022,
+@book{raschka_2022,
   title = {Machine {{Learning}} with {{PyTorch}} and {{Scikit-Learn}}: {{Develop}} Machine Learning and Deep Learning Models with {{Python}}},
   shorttitle = {Machine {{Learning}} with {{PyTorch}} and {{Scikit-Learn}}},
   author = {Raschka, Sebastian},
@@ -227,7 +264,7 @@
   pagetotal = {1}
 }
 
-@software{risethFYSSTK4155Project12026,
+@software{riseth_2026,
   title = {{{FYS-STK4155 Project}} 1},
   author = {Riseth, Sigurd},
   date = {2026-10},
@@ -236,7 +273,7 @@
   version = {v0.1.0}
 }
 
-@software{risethFYSSTK4155Project22026,
+@software{riseth_2026a,
   title = {{{FYS-STK4155 Project}} 2},
   author = {Riseth, Sigurd},
   date = {2026-11},
@@ -245,7 +282,7 @@
   version = {v0.1.0}
 }
 
-@software{risethFYSSTK4155Project32026,
+@software{riseth_2026b,
   title = {{{FYS-STK4155 Project}} 3},
   author = {Riseth, Sigurd},
   date = {2026-12},
@@ -254,7 +291,7 @@
   version = {v0.1.0}
 }
 
-@article{rungeUeberEmpirischeFunktionen1901,
+@article{runge_1901,
   title = {Über empirische Funktionen und die Interpolation zwischen äquidistanten Ordinaten},
   author = {Runge, Carl},
   date = {1901},
@@ -264,7 +301,7 @@
   langid = {german}
 }
 
-@article{tibshiraniRegressionShrinkageSelection1996,
+@article{tibshirani_1996,
   title = {Regression {{Shrinkage}} and {{Selection Via}} the {{Lasso}}},
   author = {Tibshirani, Robert},
   date = {1996-01-01},
@@ -279,4 +316,12 @@
   urldate = {2026-09-22},
   abstract = {We propose a new method for estimation in linear models. The ‘lasso’ minimizes the residual sum of squares subject to the sum of the absolute value of the coefficients being less than a constant. Because of the nature of this constraint it tends to produce some coefficients that are exactly 0 and hence gives interpretable models. Our simulation studies suggest that the lasso enjoys some of the favourable properties of both subset selection and ridge regression. It produces interpretable models like subset selection and exhibits the stability of ridge regression. There is also an interesting relationship with recent work in adaptive function estimation by Donoho and Johnstone. The lasso idea is quite general and can be applied in a variety of statistical models: extensions to generalized regression models and tree-based models are briefly described.},
   file = {/Users/sigurdriseth/Zotero/storage/J7LZUX47/Tibshirani - 1996 - Regression Shrinkage and Selection Via the Lasso.pdf;/Users/sigurdriseth/Zotero/storage/6WQCSYPB/j.2517-6161.1996.tb02080.html}
+}
+
+@article{weierstrass_1885,
+  title = {Über Die Analytische {{Darstellbarkeit}} Sogenannter Willkürlicher {{Functionen}} Einer Reellen {{Veränderlichen}}},
+  author = {Weierstrass, Karl},
+  date = {1885},
+  journaltitle = {Sitzungsberichte der Akademie zu Berlin},
+  pages = {633--63, 789--805}
 }
