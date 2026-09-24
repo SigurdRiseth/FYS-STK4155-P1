@@ -1,23 +1,30 @@
-\subsection{Additional Results}
+\subsection{Additional results}
+\label{app:additional-results}
 
-Here we present additional results.
+\Cref{fig:bias_variance_by_n,fig:bias_variance_by_noise} repeat the bootstrap
+decomposition of \cref{fig:bias_variance_tradeoff_bootstrap} for other sample
+sizes and noise levels (seed 42, $B = 100$, 80/20 split). More data lowers the
+variance at every degree, while the bias, a property of the model class, hardly
+changes; the minimum therefore moves from $p = 4$ at $n = 50$ to $p = 12$ at
+$n = 400$, and for $n=400$ the variance stays below $\sigma^2$ up to $p\approx
+16$. More noise scales up the variance and the floor $\sigma^2$ but leaves the
+bias against $f$ essentially unchanged, so noisier data favor simpler models.
+For $n\leq 100$ the curves beyond the minimum are irregular, for the
+extrapolation reason discussed in \cref{subsec:results-selection}.
 
-\subsubsection{Bias--variance trade-off}
-
-Increasing the dataset size lowers the variance at any given degree: with more data the fit depends less on the particular training sample, so each prediction $\tilde{y}_i$ varies less around its mean and the variance term in \cref{eq:var-term} shrinks. The bias curve -- a property of the model family, not of $n$ -- barely moves. This postpones the variance explosion and lets model complexity grow further before overfitting sets in, as seen in \cref{fig:bias_variance_tradeoff_by_n}, where the optimal degree moves from 4 at $n=50$ to 12 at $n=400$. % is eq. 2.24 of Hjorth-Jensen relevant here?
-
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
     \centering
-    \includegraphics[width=1\linewidth]{figures/bias_variance/bias_variance_tradeoff_by_n.pdf}
-    \caption{Effect of sample size on the bias-variance trade-off}
-    \label{fig:bias_variance_tradeoff_by_n}
-\end{figure}
+    \includegraphics[width=\textwidth]{figures/bias_variance/bias_variance_tradeoff_by_n.pdf}
+    \caption{Bootstrap bias--variance decomposition of the OLS test error for
+    $n \in \{50, 100, 200, 400\}$ at $\sigma = 0.1$. Dashed: minimum of the test
+    MSE. Values above $3$ are cut off.}
+    \label{fig:bias_variance_by_n}
+\end{figure*}
 
-Increasing the noise level $\sigma^2$ has the opposite effect on complexity: \cref{fig:bias_variance_tradeoff_by_noise} shows that the error floor rises and the variance term scales up, while bias$^2$ is essentially unchanged, so noisier data favor simpler models and the best degree shifts downward.
-
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
     \centering
-    \includegraphics[width=1\linewidth]{figures/bias_variance/bias_variance_tradeoff_by_noise.pdf}
-    \caption{Effect of sample size on the bias-variance trade-off}
-    \label{fig:bias_variance_tradeoff_by_noise}
-\end{figure}
+    \includegraphics[width=\textwidth]{figures/bias_variance/bias_variance_tradeoff_by_noise.pdf}
+    \caption{Bootstrap bias--variance decomposition of the OLS test error for $\sigma \in \{0.05, 0.1,
+    0.2, 0.4\}$ at $n = 100$.}
+    \label{fig:bias_variance_by_noise}
+\end{figure*}
