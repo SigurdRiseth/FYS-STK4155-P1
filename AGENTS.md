@@ -43,7 +43,7 @@ suite, on every push to `main` and every PR.
   (the `Optimizer` registry — plain/momentum/AdaGrad/RMSProp/Adam — and
   learning-rate schedules; `GradientDescent` also supports mini-batch SGD via
   `batch_size`/`n_epochs`, looping over epochs instead of full-batch steps),
-  `resampling/` (bootstrap; cross-validation in progress), and `metrics.py`.
+  `resampling/` (bootstrap, k-fold cross-validation), and `metrics.py`.
 - `scripts/` — thin CLI entry points that wire together `src/` logic
   (argparse + I/O only), e.g. `generate_data.py` (writes
   `data/raw/runge.npz`) and the `generate_*_figures.py` scripts (write to
@@ -51,9 +51,10 @@ suite, on every push to `main` and every PR.
 - `tests/` mirrors `src/` structure and asserts determinism (same seed →
   identical output) alongside correctness of shapes/values — follow this
   pattern for new modules.
-- `data/` is gitignored except `README.md`; never commit raw or generated
-  data — regenerate via `scripts/`, or `git add -f` with documented
-  provenance if a dataset truly must be versioned.
+- `data/` is gitignored except `README.md` and `results/`; never commit raw
+  data — regenerate via `scripts/`. `data/results/*.json` (experiment
+  outputs) are the one versioned exception, per course requirements — see
+  `data/README.md`.
 - `notebooks/` is exploration-only (outputs stripped by nbstripout on
   commit); any code producing a reported result belongs in `src/`, invoked
   from a script, so results are regenerated deterministically from one
