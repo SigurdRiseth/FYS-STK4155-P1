@@ -90,10 +90,10 @@ def plot_shrinkage(X: NDArray) -> Figure:
         )
     ax2 = ax.twinx()
     ax2.semilogy(idx, s**2 / X.shape[0], "k:", lw=0.8)
-    ax2.set_ylabel(r"$s_i^2/n$ (dotted)")
+    ax2.set_ylabel(r"$\sigma_i^2/n$ (dotted)")
     ax2.grid(False)
-    ax.set_xlabel(r"Singular-value index $i$ (decreasing $s_i$)")
-    ax.set_ylabel(r"$s_i^2/(s_i^2+n\lambda)$")
+    ax.set_xlabel(r"Singular-value index $i$ (decreasing $\sigma_i$)")
+    ax.set_ylabel(r"$\sigma_i^2/(\sigma_i^2+n\lambda)$")
     fig.legend(
         *ax.get_legend_handles_labels(), title=r"$\lambda$", ncol=6, loc="outside lower center"
     )

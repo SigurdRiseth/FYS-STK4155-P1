@@ -75,10 +75,10 @@ test points near the ends of the interval, a mechanism we return to in
 \label{subsec:results-ridge}
 
 \Cref{fig:ridge_shrinkage} shows the mechanism of Ridge regression at $p=15$.
-The squared singular values of the standardized design matrix, $s_i^2/n$, span
+The squared singular values of the standardized design matrix, $\sigma_i^2/n$, span
 ten orders of magnitude, from $9.8$ to $3.8\times10^{-10}$. According to
 \cref{eq:ridge_scaling}, a penalty $\lambda$ suppresses the modes with
-$s_i^2/n \lesssim \lambda$ and leaves the others untouched, so increasing
+$\sigma_i^2/n \lesssim \lambda$ and leaves the others untouched, so increasing
 $\lambda$ by a decade removes roughly one more mode. $\lambda = 10^{-10}$ is
 essentially OLS; $\lambda = 1$ keeps only the first three modes. The ridge
 trace (\cref{fig:ridge_trace}) shows the corresponding coefficients: the large,
@@ -88,10 +88,10 @@ $10^{-6}$, as the smallest modes are removed.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{figures/ridge/ridge_shrinkage_degree15.pdf}
-    \caption{Ridge shrinkage factors $d_i = s_i^2/(s_i^2+n\lambda)$
+    \caption{Ridge shrinkage factors $d_i = \sigma_i^2/(\sigma_i^2+n\lambda)$
     (\cref{eq:ridge_scaling}) of the SVD modes of the standardized design matrix at
     $p=15$ (training set of the reference data), for $\lambda$ from $10^{-10}$
-    to $1$. Dotted, right axis: $s_i^2/n$.}
+    to $1$. Dotted, right axis: $\sigma_i^2/n$.}
     \label{fig:ridge_shrinkage}
 \end{figure}
 
