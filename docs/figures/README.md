@@ -1,19 +1,13 @@
 # docs/figures/
 
-Figures here are **generated, not committed** — this README is the only
-tracked file in this directory (see `.gitignore`). Regenerate them by
-running the report-figure scripts in `scripts/`; each one calls
-`save_figure()` (`scripts/utils/plotting.py`) and writes PDFs into a
-subdirectory named after the experiment.
-
-## Reproducing
+Figures (PDF) and tables (`tables/*.tex`) here are generated, not committed.
+Regenerate all of them, from the settings in `scripts/utils/config.py`, with
 
 ```bash
-uv sync
-uv run python scripts/generate_data.py --pdf    # -> docs/figures/data/
-uv run python scripts/generate_ridge_figures.py # -> docs/figures/ridge/
+make figures        # runs `make experiments` first if results are missing or stale
 ```
 
-Pass `--help` to any script for the options (seed, noise, polynomial
-degree, ...) used to produce its figures — every experiment script takes
-an explicit `--seed`, so output is reproducible bit-for-bit.
+Subdirectories follow the report: `data/`, `ols/`, `ridge/`, `bias_variance/`,
+`cross_validation/` (resampling and model selection), `gradient_descent/`,
+`sgd/`, `lasso/`, `tables/`. Style (sizes for the IEEE two-column layout,
+fonts, colors) is defined once in `scripts/utils/plotting.py`.
