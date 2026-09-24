@@ -10,6 +10,8 @@ wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
 TODO(author): describe your review/changes.
 """
 
+from typing import Any
+
 import numpy as np
 
 # Data: Runge's function on [-1, 1], x ~ U(-1, 1), additive N(0, NOISE^2) noise.
@@ -50,7 +52,7 @@ SGD_BATCH_SIZES = (4, 16, 32, 80)
 SGD_EPOCHS = 2000
 
 # Own Lasso solver used everywhere: subgradient descent with Adam (regression/lasso.py).
-LASSO_GD = {"learning_rate": 0.05, "optimizer": "adam", "max_iter": 5000}
+LASSO_GD: dict[str, Any] = {"learning_rate": 0.05, "optimizer": "adam", "max_iter": 5000}
 
 # Dense grid on [-1, 1] for the true (known-f) test error.
 X_GRID = np.linspace(-1, 1, 2001)

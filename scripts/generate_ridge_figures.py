@@ -10,6 +10,8 @@ wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
 TODO(author): describe your review/changes.
 """
 
+from functools import partial
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.cm import ScalarMappable
@@ -38,7 +40,7 @@ def plot_test_mse_by_lambda() -> Figure:
     cmap = plt.get_cmap("plasma")
     for i, lam in enumerate(MSE_LAMBDAS):
         res = fit_polynomial_degree_sweep(
-            x, y, degrees, lambda lam=lam: Ridge(lam=lam), test_size=C.TEST_SIZE, seed=C.SEED
+            x, y, degrees, partial(Ridge, lam=lam), test_size=C.TEST_SIZE, seed=C.SEED
         )
         ax.plot(
             degrees,

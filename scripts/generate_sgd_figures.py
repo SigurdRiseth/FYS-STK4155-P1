@@ -19,7 +19,7 @@ TODO(author): describe your review/changes.
 """
 
 import time
-from typing import Any
+from typing import Any, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +35,9 @@ from fys_stk4155_p1.regression.ridge import Ridge
 
 ADAM_LR = 0.03
 LR_DECAY = 1e-3
+
+OptName = Literal["plain", "adam"]
+_OPT_NAMES: tuple[OptName, OptName] = ("plain", "adam")
 
 
 def _problem() -> tuple[NDArray, NDArray]:
@@ -59,7 +62,7 @@ def plot_batch_size_sweep(X: NDArray, y: NDArray) -> Figure:
     gap = _gap(X, y, 0.0)
     fig, axes = plt.subplots(1, 2, figsize=WIDE, sharey=True)
     cmap = plt.get_cmap("viridis")
-    for ax, opt, title in zip(axes, ("plain", "adam"), ("(a) plain SGD", "(b) Adam"), strict=True):
+    for ax, opt, title in zip(axes, _OPT_NAMES, ("(a) plain SGD", "(b) Adam"), strict=True):
         for i, b in enumerate(C.SGD_BATCH_SIZES):
             full = b >= X.shape[0]
             kwargs: dict[str, Any] = (
@@ -102,7 +105,7 @@ def sgd_table(X: NDArray, y: NDArray, batch: int = 16, repeats: int = 3) -> str:
     rows = []
     for name, lam in (("OLS", 0.0), ("Ridge", C.GD_LAMBDA)):
         gap = _gap(X, y, lam)
-        for opt, label in (("plain", "plain"), ("adam", "Adam")):
+        for opt, label in zip(_OPT_NAMES, ("plain", "Adam"), strict=True):
             for b in (None, batch):
                 kwargs: dict[str, Any] = (
                     {"max_iter": C.SGD_EPOCHS, "tol": 0.0}

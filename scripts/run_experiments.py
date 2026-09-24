@@ -32,7 +32,8 @@ import multiprocessing as mp
 import os
 import time
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -192,18 +193,18 @@ def _e2_seed(seed: int) -> dict:
     ols = kfold_mse_degree_sweep(x_tr, y_tr, C.DEGREES, OLS, k=k, seed=seed)
     ridge_folds = np.stack(
         [
-            kfold_mse_degree_sweep(
-                x_tr, y_tr, C.DEGREES, lambda lam=lam: _ridge(lam), k=k, seed=seed
-            )["mse_folds"]
+            kfold_mse_degree_sweep(x_tr, y_tr, C.DEGREES, partial(_ridge, lam), k=k, seed=seed)[
+                "mse_folds"
+            ]
             for lam in C.RIDGE_LAMBDAS
         ],
         axis=1,
     )
     lasso_folds = np.stack(
         [
-            kfold_mse_degree_sweep(
-                x_tr, y_tr, C.DEGREES, lambda lam=lam: _lasso(lam), k=k, seed=seed
-            )["mse_folds"]
+            kfold_mse_degree_sweep(x_tr, y_tr, C.DEGREES, partial(_lasso, lam), k=k, seed=seed)[
+                "mse_folds"
+            ]
             for lam in C.LASSO_LAMBDAS
         ],
         axis=1,
@@ -248,7 +249,7 @@ def _e2_seed(seed: int) -> dict:
         r10 = np.stack(
             [
                 kfold_mse_degree_sweep(
-                    x_tr, y_tr, C.DEGREES, lambda lam=lam: _ridge(lam), k=10, seed=seed
+                    x_tr, y_tr, C.DEGREES, partial(_ridge, lam), k=10, seed=seed
                 )["mse_mean"]
                 for lam in C.RIDGE_LAMBDAS
             ],
@@ -332,7 +333,7 @@ def _e3_config(d: int, lam: float) -> dict[str, Any]:
     L = float(np.linalg.eigvalsh(2 / len(y_tr) * X.T @ X)[-1])
 
     n_it = 50_000
-    runs = {
+    runs: dict[str, dict[str, Any]] = {
         "plain": {"learning_rate": 1 / L, "optimizer": "plain"},
         "momentum": {"learning_rate": 1 / L, "optimizer": "momentum"},
         "adagrad": {"learning_rate": 0.05, "optimizer": "adagrad"},
@@ -485,13 +486,15 @@ def run_e5(a: argparse.Namespace) -> None:
     for d in (5, 10, 15):
         (X,) = design(x_tr, d)
         diffs: dict[str, list[float]] = {"ols": [], "ridge": [], "lasso": []}
+        GradFn = Callable[[NDArray, NDArray, NDArray, float, bool], NDArray]
+        cases: list[tuple[str, GradFn, GradFn, float]] = [
+            ("ols", analytical_gradient, autodiff_gradient, 0.0),
+            ("ridge", analytical_gradient, autodiff_gradient, 0.1),
+            ("lasso", lasso_subgradient, lasso_autodiff_gradient, 0.1),
+        ]
         for _ in range(100):
-            th = rng.normal(size=X.shape[1])
-            for name, fa, fb, lam in (
-                ("ols", analytical_gradient, autodiff_gradient, 0.0),
-                ("ridge", analytical_gradient, autodiff_gradient, 0.1),
-                ("lasso", lasso_subgradient, lasso_autodiff_gradient, 0.1),
-            ):
+            th = rng.normal(size=int(X.shape[1]))
+            for name, fa, fb, lam in cases:
                 ga = np.asarray(fa(X, y_tr, th, lam, True))
                 gb = np.asarray(fb(X, y_tr, th, lam, True))
                 diffs[name].append(float(np.max(np.abs(ga - gb)) / np.max(np.abs(ga))))
