@@ -62,3 +62,15 @@ def test_variance_is_zero_for_a_single_bootstrap() -> None:
 
     np.testing.assert_allclose(results["variance"], 0.0, atol=1e-12)
     np.testing.assert_allclose(results["mse_test"], results["bias2"], rtol=1e-10)
+
+
+def test_bias_against_true_function_excludes_noise_floor() -> None:
+    from fys_stk4155_p1.data.runge import generate_runge_data, runge_function
+    from fys_stk4155_p1.regression.ordinary_least_squares import OLS
+    from fys_stk4155_p1.resampling.bootstrap import bootstrap_bias_variance_sweep
+
+    x, y = generate_runge_data(n=400, noise_std=0.3, seed=1)
+    res = bootstrap_bias_variance_sweep(x, y, [0, 8], OLS, n_bootstraps=50, f_true=runge_function)
+    # bias2 (measured against noisy y) absorbs sigma^2 = 0.09; bias2_f does not.
+    assert np.all(res["bias2"] > res["bias2_f"])
+    assert res["bias2"][1] - res["bias2_f"][1] > 0.05

@@ -66,15 +66,18 @@ def kfold_mse_degree_sweep(
 
     Returns:
         Dict with keys "degrees", "mse_mean", "mse_std" (held-out-fold test
-        MSE, arrays aligned with "degrees"), and "mse_train_mean",
-        "mse_train_std" (in-fold training MSE). The "_std" entries are the
-        standard deviation of the k per-fold MSEs.
+        MSE, arrays aligned with "degrees"), "mse_folds" (the k per-fold
+        held-out MSEs, shape (n_degrees, k), in `KFold` order, so two sweeps
+        with the same `seed` can be compared fold by fold), and
+        "mse_train_mean", "mse_train_std" (in-fold training MSE). The "_std"
+        entries are the standard deviation of the k per-fold MSEs.
     """
     degrees_arr = np.array(list(degrees))
     kfold = KFold(n_splits=k, shuffle=True, random_state=seed)
 
     mse_mean = np.empty(degrees_arr.shape)
     mse_std = np.empty(degrees_arr.shape)
+    mse_folds = np.empty((degrees_arr.shape[0], k))
     mse_train_mean = np.empty(degrees_arr.shape)
     mse_train_std = np.empty(degrees_arr.shape)
 
@@ -91,6 +94,7 @@ def kfold_mse_degree_sweep(
         )
         mse_mean[i] = -scores["test_score"].mean()
         mse_std[i] = scores["test_score"].std()
+        mse_folds[i] = -scores["test_score"]
         mse_train_mean[i] = -scores["train_score"].mean()
         mse_train_std[i] = scores["train_score"].std()
 
@@ -98,6 +102,7 @@ def kfold_mse_degree_sweep(
         "degrees": degrees_arr,
         "mse_mean": mse_mean,
         "mse_std": mse_std,
+        "mse_folds": mse_folds,
         "mse_train_mean": mse_train_mean,
         "mse_train_std": mse_train_std,
     }
