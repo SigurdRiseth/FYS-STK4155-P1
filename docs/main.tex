@@ -1,4 +1,4 @@
-\documentclass[a4paper, conference, final]{IEEEtran}
+\documentclass[a4paper]{IEEEtran}
 % \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote.
 % If that is unneeded, please comment it out.
@@ -42,8 +42,8 @@
 }
 
 \author{
-    \IEEEauthorblockN{Sigurd Riseth}
-    \IEEEauthorblockA{\textit{Department of Physics} \\
+    \IEEEauthorblockN{Sigurd Riseth}\\
+    \IEEEauthorblockA{\textit{Department of Physics}\\
     \textit{University of Oslo}\\
     Oslo, Norway \\
     sigurri@uio.no}
@@ -61,7 +61,8 @@ with increasing degree, is a demanding test of how model complexity is
 chosen from noisy data. We fitted polynomials of degree up to 20
 to 100 noisy samples with ordinary least squares, Ridge and Lasso regression,
 estimated the test error with the bootstrap and k-fold cross-validation, and
-replaced the closed-form solutions by our own gradient-descent code. Since the data were synthetic, we compared every estimate
+replaced the closed-form solutions with our own gradient-descent code.
+Since the data were synthetic, we compared every estimate
 with the true error. The bootstrap and cross-validation selected
 median degrees of 8 and 10, against 14 for the true optimum, because their
 estimates are dominated by extrapolation beyond the resampled training range.
@@ -69,8 +70,7 @@ Over 31 data sets, Ridge lowered the cross-validation error of least squares by
 a median of 5\% but not the held-out error, and subgradient-descent Lasso did
 worse. Momentum and Adam reached the closed-form solution 25
 and 9 times faster than plain gradient descent at degree 5, yet no optimizer
-converged at degree 10 or higher without regularization. For polynomial models,
-how the error is estimated matters more than which penalty is used.
+converged at degree 10 or higher without regularization.
 \end{abstract}
 
 \begin{IEEEkeywords}
