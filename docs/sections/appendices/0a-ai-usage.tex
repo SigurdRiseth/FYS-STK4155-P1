@@ -18,8 +18,12 @@ and verified by the author.
     desktop app (cowork), September--October 2026
     (Claude Sonnet 5.0 and Opus 5.5, 5, and 4.8 models).
     \item OpenAI ChatGPT via \url{https://chatgpt.com}, September 2026.
+    \item GitHub Copilot via VS Code, unknown model, September 2026.
 \end{itemize}
 
+Claude was used most often, both for code development and for writing the report.
+ChatGPT was sometimes used to discuss solutions and writing. GitHub Copilot was
+used only rarely through the VS Code ``fix'' interface to address minor warnings.
 
 \subsubsection{Text writing and editing}
 \Cref{tab:llm-writing-contribution} gives the contribution level for each part
@@ -35,15 +39,32 @@ of the report.
         \textbf{Section} & \textbf{Level} & \textbf{Notes} \\
         \midrule
         Abstract & 3 & Drafted by Claude from the finished results; revised by the author. \\
-        Introduction & 2 & Author's text; last three paragraphs revised by Claude. \\
-        Methods & 2 & Author's text; corrected by Claude. \\
-        Implementation & 2 & Author's text; revised by Claude. \\
-        Results and discussion & 2 & Author's text; revised and improved by Claude. \\
-        Conclusion & 2 & Drafted by the author; revised and imporved by Claude. \\
+        Introduction & 2 & Authors text; last three paragraphs revised by Claude. \\
+        Methods & 2 & Authors text; corrected by Claude. \\
+        Implementation & 2 & Authors text; revised by Claude. \\
+        Results and discussion & 2 & Authors text; revised and improved by Claude. \\
+        Conclusion & 2 & Drafted by the author; revised and improved by Claude. \\
         Appendices & 3 & Drafted by Claude; revised by the author. \\
         \bottomrule
     \end{tabularx}}
 \end{table}
+
+For the abstract, with a contribution level of 3, we gave Claude access to the
+project repository containing both the source code and the \LaTeX{} source of
+the report. The LLM was instructed to review the implementation, results, and
+written report before drafting a proposed abstract. We also provided relevant
+course literature on writing abstracts and scientific reports, which the LLM
+used as guidance when preparing the draft. The abstract was subsequently
+reviewed and revised by the author.
+
+The appendices are also assigned level 3 because the LLM was used to help
+maintain the documentation of AI/LLM use throughout the project. When using an
+LLM, we instructed it to record its contribution in this appendix, including
+the relevant section or code file, contribution level, and a brief description
+of how the LLM was used. This allowed the appendix to be updated as LLM-assisted
+work was performed rather than reconstructed retrospectively. The final appendix
+was reviewed and revised by the author to ensure that the reported contribution
+levels and descriptions accurately reflect the work performed.
 
 \subsubsection{Code generation and assistance}
 \Cref{tab:code-generation} gives the level for each source file (levels 0--4).
