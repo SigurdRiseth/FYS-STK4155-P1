@@ -13,7 +13,6 @@ def ridge_coefficient_path(
     X: NDArray[np.float64],
     y: NDArray[np.float64],
     lambdas: NDArray[np.float64],
-    fit_intercept_column: bool = False,
 ) -> NDArray[np.float64]:
     """Fit Ridge once per lambda and stack the resulting coefficients.
 
@@ -21,18 +20,12 @@ def ridge_coefficient_path(
         X: Design matrix, shape (n_samples, n_features).
         y: Targets, shape (n_samples,).
         lambdas: Penalty strengths to sweep, shape (n_lambdas,).
-        fit_intercept_column: Passed through to `Ridge` (see its docstring).
 
     Returns:
         Coefficient path, shape (n_lambdas, n_features); row k is the fit at
         lambdas[k].
     """
-    return np.array(
-        [
-            Ridge(lam=lam, fit_intercept_column=fit_intercept_column).fit(X, y).coef_
-            for lam in lambdas
-        ]
-    )
+    return np.array([Ridge(lam=lam).fit(X, y).coef_ for lam in lambdas])
 
 
 def lasso_coefficient_path(
@@ -43,7 +36,6 @@ def lasso_coefficient_path(
     optimizer: Literal["plain", "momentum", "adagrad", "rmsprop", "adam"] = "adam",
     max_iter: int = 5000,
     tol: float = 1e-10,
-    fit_intercept_column: bool = False,
 ) -> NDArray[np.float64]:
     """Fit Lasso once per lambda and stack the resulting coefficients.
 
@@ -61,7 +53,6 @@ def lasso_coefficient_path(
         optimizer: Which `Optimizer` subclass to fit each lambda with.
         max_iter: Maximum number of gradient steps per lambda.
         tol: Convergence tolerance passed through to `Lasso`.
-        fit_intercept_column: Passed through to `Lasso` (see its docstring).
 
     Returns:
         Coefficient path, shape (n_lambdas, n_features); row k is the fit at
@@ -75,7 +66,6 @@ def lasso_coefficient_path(
                 max_iter=max_iter,
                 tol=tol,
                 optimizer=optimizer,
-                fit_intercept_column=fit_intercept_column,
             )
             .fit(X, y)
             .coef_
@@ -98,8 +88,8 @@ def singular_value_shrinkage(
     returned by `np.linalg.svd`.
 
     Args:
-        X: Matrix whose SVD modes are shrunk (typically the non-intercept,
-            standardized columns of a design matrix), shape (n_samples, n_features).
+        X: Matrix whose SVD modes are shrunk (typically the standardized
+            columns of a design matrix), shape (n_samples, n_features).
         lambdas: Penalty strengths, shape (n_lambdas,).
 
     Returns:

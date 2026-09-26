@@ -38,16 +38,19 @@ OPTIMIZERS = ["plain", "momentum", "adagrad", "rmsprop", "adam"]
 def _problem() -> tuple[NDArray, NDArray]:
     _, _, x_tr, _, y_tr, _ = data()
     (X,) = design(x_tr, C.GD_DEGREE)
-    return X, y_tr
+    # cost()/hessian_max_eigenvalue() never center y themselves; GradientDescent
+    # and Ridge do it internally (see regression.base.LinearModel), so pre-centering
+    # here keeps the two consistent.
+    return X, y_tr - y_tr.mean()
 
 
 def plot_convergence(X: NDArray, y: NDArray, max_iter: int = 6000) -> Figure:
     fig, ax = plt.subplots(figsize=COLUMN)
     methods: list[Literal["analytical", "autodiff"]] = ["analytical", "autodiff"]
     for lam, color, name in ((0.0, COLORS["ols"], "OLS"), (C.GD_LAMBDA, COLORS["ridge"], "Ridge")):
-        L = float(hessian_max_eigenvalue(X, lam=lam, fit_intercept_column=True))
-        theta_star = Ridge(lam=lam, fit_intercept_column=True).fit(X, y).coef_
-        J_star = float(cost(X, y, theta_star, lam, fit_intercept_column=True))
+        L = float(hessian_max_eigenvalue(X, lam=lam))
+        theta_star = Ridge(lam=lam).fit(X, y).coef_
+        J_star = float(cost(X, y, theta_star, lam))
         for method, ls, lw in zip(methods, ("-", "--"), (2.2, 0.9), strict=True):
             gd = GradientDescent(
                 learning_rate=1 / L,
@@ -55,7 +58,6 @@ def plot_convergence(X: NDArray, y: NDArray, max_iter: int = 6000) -> Figure:
                 max_iter=max_iter,
                 tol=0.0,
                 gradient_method=method,
-                fit_intercept_column=True,
             ).fit(X, y)
             gap = (gd.cost_history_ - J_star) / J_star
             lab = f"{name}, {method}" + (
@@ -81,9 +83,9 @@ def plot_stability(X: NDArray, y: NDArray, n_steps: int = 2000) -> Figure:
     ratios = np.linspace(0.05, 1.3, 26)
     fig, ax = plt.subplots(figsize=COLUMN)
     for lam, color, name in ((0.0, COLORS["ols"], "OLS"), (C.GD_LAMBDA, COLORS["ridge"], "Ridge")):
-        gamma_max = 2 / float(hessian_max_eigenvalue(X, lam=lam, fit_intercept_column=True))
-        theta_star = Ridge(lam=lam, fit_intercept_column=True).fit(X, y).coef_
-        J_star = float(cost(X, y, theta_star, lam, fit_intercept_column=True))
+        gamma_max = 2 / float(hessian_max_eigenvalue(X, lam=lam))
+        theta_star = Ridge(lam=lam).fit(X, y).coef_
+        J_star = float(cost(X, y, theta_star, lam))
         gaps = []
         with np.errstate(over="ignore", invalid="ignore"):
             for r in ratios:
@@ -92,7 +94,6 @@ def plot_stability(X: NDArray, y: NDArray, n_steps: int = 2000) -> Figure:
                     lam=lam,
                     max_iter=n_steps,
                     tol=0.0,
-                    fit_intercept_column=True,
                 ).fit(X, y)
                 gaps.append((gd.cost_history_[-1] - J_star) / J_star)
         gaps_arr = np.clip(np.nan_to_num(np.asarray(gaps), nan=1e12, posinf=1e12), 1e-16, 1e12)

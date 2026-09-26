@@ -53,9 +53,7 @@ def test_model_factory_is_used_per_degree_ridge_matches_ols_at_lambda_zero() -> 
     degrees = range(1, 5)
 
     ols_results = fit_polynomial_degree_sweep(x, y, degrees, OLS)
-    ridge_results = fit_polynomial_degree_sweep(
-        x, y, degrees, lambda: Ridge(lam=0.0, fit_intercept_column=False)
-    )
+    ridge_results = fit_polynomial_degree_sweep(x, y, degrees, lambda: Ridge(lam=0.0))
 
     for theta_ols, theta_ridge in zip(
         ols_results["weights"], ridge_results["weights"], strict=True
@@ -67,11 +65,7 @@ def test_higher_lambda_shrinks_coefficients() -> None:
     x, y = _sample_data(n=200)
     degrees = range(5, 6)
 
-    small_lam = fit_polynomial_degree_sweep(
-        x, y, degrees, lambda: Ridge(lam=1e-3, fit_intercept_column=False)
-    )
-    large_lam = fit_polynomial_degree_sweep(
-        x, y, degrees, lambda: Ridge(lam=1e3, fit_intercept_column=False)
-    )
+    small_lam = fit_polynomial_degree_sweep(x, y, degrees, lambda: Ridge(lam=1e-3))
+    large_lam = fit_polynomial_degree_sweep(x, y, degrees, lambda: Ridge(lam=1e3))
 
     assert np.linalg.norm(large_lam["weights"][0]) < np.linalg.norm(small_lam["weights"][0])

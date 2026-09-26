@@ -48,37 +48,7 @@ def test_cost_with_regularization():
     assert result == pytest.approx(expected)
 
 
-def test_cost_excludes_intercept_from_regularization():
-    X = np.array(
-        [
-            [1.0, 2.0],
-            [1.0, 3.0],
-        ]
-    )
-    y = np.array([2.0, 3.0])
-    theta = np.array([10.0, 1.0])
-
-    # Predictions: [12, 13]
-    # MSE = ((2-12)^2 + (3-13)^2) / 2 = 100
-    #
-    # Only theta[1] is penalized:
-    # penalty = 1^2 = 1
-    #
-    # Total = 101
-    expected = 101.0
-
-    result = cost(
-        X,
-        y,
-        theta,
-        lam=1.0,
-        fit_intercept_column=True,
-    )
-
-    assert result == pytest.approx(expected)
-
-
-def test_cost_regularizes_intercept_when_not_fit_intercept_column():
+def test_cost_regularizes_every_coefficient():
     X = np.array(
         [
             [1.0, 2.0],
@@ -93,13 +63,7 @@ def test_cost_regularizes_intercept_when_not_fit_intercept_column():
     # Total = 201
     expected = 201.0
 
-    result = cost(
-        X,
-        y,
-        theta,
-        lam=1.0,
-        fit_intercept_column=False,
-    )
+    result = cost(X, y, theta, lam=1.0)
 
     assert result == pytest.approx(expected)
 
@@ -157,25 +121,7 @@ def test_lasso_cost_with_regularization():
     assert result == pytest.approx(expected)
 
 
-def test_lasso_cost_excludes_intercept_from_regularization():
-    X = np.array(
-        [
-            [1.0, 2.0],
-            [1.0, 3.0],
-        ]
-    )
-    y = np.array([2.0, 3.0])
-    theta = np.array([10.0, 1.0])
-
-    # Predictions: [12, 13]; MSE = 100. Only theta[1] is penalized: |1| = 1.
-    expected = 101.0
-
-    result = lasso_cost(X, y, theta, lam=1.0, fit_intercept_column=True)
-
-    assert result == pytest.approx(expected)
-
-
-def test_lasso_cost_regularizes_intercept_when_not_fit_intercept_column():
+def test_lasso_cost_regularizes_every_coefficient():
     X = np.array(
         [
             [1.0, 2.0],
@@ -188,7 +134,7 @@ def test_lasso_cost_regularizes_intercept_when_not_fit_intercept_column():
     # MSE = 100; penalty = |10| + |1| = 11 (contrast with Ridge's |10|^2+|1|^2=101).
     expected = 111.0
 
-    result = lasso_cost(X, y, theta, lam=1.0, fit_intercept_column=False)
+    result = lasso_cost(X, y, theta, lam=1.0)
 
     assert result == pytest.approx(expected)
 
@@ -247,25 +193,6 @@ def test_analytical_gradient_with_regularization():
     np.testing.assert_allclose(result, expected)
 
 
-def test_analytical_gradient_excludes_intercept_from_regularization():
-    X = np.array(
-        [
-            [1.0, 2.0],
-            [1.0, 3.0],
-            [1.0, 4.0],
-        ]
-    )
-    y = np.array([2.0, 3.0, 5.0])
-    theta = np.array([1.0, 1.0])
-
-    # Only theta[1] is penalized: + 2*lam*theta = [0, 2].
-    expected = np.array([4.0 / 3.0, 16.0 / 3.0])
-
-    result = analytical_gradient(X, y, theta, lam=1.0, fit_intercept_column=True)
-
-    np.testing.assert_allclose(result, expected)
-
-
 def test_analytical_gradient_shape_matches_theta():
     rng = np.random.default_rng(0)
     X = rng.normal(size=(10, 4))
@@ -284,17 +211,16 @@ def test_analytical_gradient_matches_numerical_gradient():
     theta = rng.normal(size=5)
     eps = 1e-6
 
-    for lam, fit_intercept_column in [(0.0, False), (0.7, False), (0.7, True)]:
+    for lam in (0.0, 0.7):
         numerical = np.zeros_like(theta)
         for i in range(theta.size):
             step = np.zeros_like(theta)
             step[i] = eps
-            numerical[i] = (
-                cost(X, y, theta + step, lam, fit_intercept_column)
-                - cost(X, y, theta - step, lam, fit_intercept_column)
-            ) / (2 * eps)
+            numerical[i] = (cost(X, y, theta + step, lam) - cost(X, y, theta - step, lam)) / (
+                2 * eps
+            )
 
-        result = analytical_gradient(X, y, theta, lam, fit_intercept_column)
+        result = analytical_gradient(X, y, theta, lam)
 
         np.testing.assert_allclose(result, numerical, atol=1e-5)
 
@@ -338,25 +264,6 @@ def test_lasso_subgradient_with_regularization():
     np.testing.assert_allclose(result, expected)
 
 
-def test_lasso_subgradient_excludes_intercept_from_regularization():
-    X = np.array(
-        [
-            [1.0, 2.0],
-            [1.0, 3.0],
-            [1.0, 4.0],
-        ]
-    )
-    y = np.array([2.0, 3.0, 5.0])
-    theta = np.array([1.0, 1.0])
-
-    # Only theta[1] is penalized: + lam*sign(theta) = [0, 1].
-    expected = np.array([4.0 / 3.0, 13.0 / 3.0])
-
-    result = lasso_subgradient(X, y, theta, lam=1.0, fit_intercept_column=True)
-
-    np.testing.assert_allclose(result, expected)
-
-
 def test_lasso_subgradient_uses_np_sign_zero_at_the_kink():
     # Chosen so the MSE-gradient contribution at index 0 is exactly zero
     # (X @ theta == y exactly), isolating the L1 term's value there: this
@@ -391,17 +298,16 @@ def test_lasso_subgradient_matches_numerical_gradient_away_from_zero():
     theta = rng.normal(size=5)  # essentially never exactly 0
     eps = 1e-6
 
-    for lam, fit_intercept_column in [(0.0, False), (0.7, False), (0.7, True)]:
+    for lam in (0.0, 0.7):
         numerical = np.zeros_like(theta)
         for i in range(theta.size):
             step = np.zeros_like(theta)
             step[i] = eps
             numerical[i] = (
-                lasso_cost(X, y, theta + step, lam, fit_intercept_column)
-                - lasso_cost(X, y, theta - step, lam, fit_intercept_column)
+                lasso_cost(X, y, theta + step, lam) - lasso_cost(X, y, theta - step, lam)
             ) / (2 * eps)
 
-        result = lasso_subgradient(X, y, theta, lam, fit_intercept_column)
+        result = lasso_subgradient(X, y, theta, lam)
 
         np.testing.assert_allclose(result, numerical, atol=1e-5)
 
@@ -478,39 +384,16 @@ def test_hessian_max_eigenvalue_with_regularization():
     assert result == pytest.approx(expected)
 
 
-def test_hessian_max_eigenvalue_excludes_intercept_from_regularization():
-    X = np.array(
-        [
-            [1.0, 2.0],
-            [1.0, 3.0],
-            [1.0, 4.0],
-        ]
-    )
-    lam = 0.5
-
-    penalty = np.eye(2)
-    penalty[0, 0] = 0.0
-    H = 2.0 / 3.0 * X.T @ X + 2.0 * lam * penalty
-    expected = np.linalg.eigvalsh(H)[-1]
-
-    result = hessian_max_eigenvalue(X, lam=lam, fit_intercept_column=True)
-
-    assert result == pytest.approx(expected)
-
-
 def test_hessian_max_eigenvalue_matches_hand_built_hessian():
     rng = np.random.default_rng(2)
     X = rng.normal(size=(15, 4))
     n_samples, n_features = X.shape
 
-    for lam, fit_intercept_column in [(0.0, False), (0.2, False), (0.2, True)]:
-        penalty = np.eye(n_features)
-        if fit_intercept_column:
-            penalty[0, 0] = 0.0
-        H = 2.0 / n_samples * X.T @ X + 2.0 * lam * penalty
+    for lam in (0.0, 0.2):
+        H = 2.0 / n_samples * X.T @ X + 2.0 * lam * np.eye(n_features)
         expected = np.linalg.eigvalsh(H)[-1]
 
-        result = hessian_max_eigenvalue(X, lam=lam, fit_intercept_column=fit_intercept_column)
+        result = hessian_max_eigenvalue(X, lam=lam)
 
         assert result == pytest.approx(expected)
 

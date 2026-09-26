@@ -8,6 +8,7 @@ def _problem() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     rng = np.random.default_rng(0)
     X = rng.normal(size=(50, 3))
     y = X @ np.array([1.0, -2.0, 0.5]) + 0.1 * rng.normal(size=50)
+    y = y - y.mean()  # cost/analytical_gradient never center y themselves
     theta_star = Ridge(lam=0.0).fit(X, y).coef_
     return X, y, theta_star
 

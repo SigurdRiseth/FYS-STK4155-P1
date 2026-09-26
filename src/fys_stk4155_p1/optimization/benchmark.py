@@ -16,7 +16,6 @@ def iterations_to_tolerance(
     optimizer: str,
     learning_rate: float,
     lam: float = 0.0,
-    fit_intercept_column: bool = False,
     param_tol: float = 1e-3,
     cost_tol: float = 1e-6,
     max_iter: int = 100_000,
@@ -37,12 +36,13 @@ def iterations_to_tolerance(
 
     Args:
         X: Design matrix, shape (n_samples, n_features).
-        y: Targets, shape (n_samples,).
-        theta_star: Known minimizer of `cost(X, y, ., lam, fit_intercept_column)`.
+        y: Targets, already mean-centered to match `theta_star` and `cost`'s
+            own convention (see `regression.base.LinearModel`), shape
+            (n_samples,).
+        theta_star: Known minimizer of `cost(X, y, ., lam)`.
         optimizer: Key of `OPTIMIZER_REGISTRY`.
         learning_rate: Optimizer step size.
         lam: L2 penalty strength (0 for OLS).
-        fit_intercept_column: Exclude column 0 from the penalty.
         param_tol: Relative parameter-error tolerance.
         cost_tol: Relative cost-gap tolerance.
         max_iter: Maximum number of steps.
@@ -66,7 +66,7 @@ def iterations_to_tolerance(
     opt.reset(n_features)
     theta = np.zeros(n_features, dtype=np.float64)
     theta_norm = float(np.linalg.norm(theta_star))
-    cost_star = float(cost(X, y, theta_star, lam, fit_intercept_column))
+    cost_star = float(cost(X, y, theta_star, lam))
 
     iters_param: int | None = None
     iters_cost: int | None = None
@@ -75,7 +75,7 @@ def iterations_to_tolerance(
     cost_gap = np.inf
     k = 0
     for k in range(1, max_iter + 1):
-        grad = analytical_gradient(X, y, theta, lam, fit_intercept_column)
+        grad = analytical_gradient(X, y, theta, lam)
         theta = opt.step(theta, grad)
         param_err = float(np.linalg.norm(theta - theta_star)) / theta_norm
         if not np.isfinite(param_err) or param_err > divergence_factor:
@@ -84,14 +84,14 @@ def iterations_to_tolerance(
         if iters_param is None and param_err < param_tol:
             iters_param = k
         if iters_cost is None:
-            cost_gap = (float(cost(X, y, theta, lam, fit_intercept_column)) - cost_star) / cost_star
+            cost_gap = (float(cost(X, y, theta, lam)) - cost_star) / cost_star
             if cost_gap < cost_tol:
                 iters_cost = k
         if iters_param is not None and iters_cost is not None:
             break
 
     if not diverged:
-        cost_gap = (float(cost(X, y, theta, lam, fit_intercept_column)) - cost_star) / cost_star
+        cost_gap = (float(cost(X, y, theta, lam)) - cost_star) / cost_star
     return {
         "iters_param": iters_param,
         "iters_cost": iters_cost,

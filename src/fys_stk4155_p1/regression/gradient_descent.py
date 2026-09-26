@@ -7,7 +7,7 @@ with a freshly shuffled ordering each epoch and an optional learning-rate
 schedule (Section 4.7.1 of Hjorth-Jensen (2026))."""
 
 from collections.abc import Callable
-from typing import Any, Literal, Self
+from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,11 +29,11 @@ from fys_stk4155_p1.regression.cost import (
 )
 
 _GradientFn = Callable[
-    [NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], float, bool],
+    [NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], float],
     NDArray[np.float64],
 ]
 _CostFn = Callable[
-    [NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], float, bool],
+    [NDArray[np.float64], NDArray[np.float64], NDArray[np.float64], float],
     np.float64,
 ]
 # theta, cost_history, cost_flops, n_updates
@@ -126,8 +126,6 @@ class GradientDescent(LinearModel):
         rho: Squared-gradient decay, used only when `optimizer="rmsprop"`.
         eps: Numerical-stability constant, used by every optimizer except
             "plain" and "momentum".
-        fit_intercept_column: If True, the first column of X is treated as
-            an all-ones intercept term and is excluded from the penalty.
         batch_size: Mini-batch size for SGD. `None` (the default) fits by
             full-batch gradient descent instead.
         n_epochs: Number of passes over the training set. Only used when
@@ -177,7 +175,6 @@ class GradientDescent(LinearModel):
         beta2: float = 0.999,
         rho: float = 0.9,
         eps: float = 1e-8,
-        fit_intercept_column: bool = False,
         batch_size: int | None = None,
         n_epochs: int = 100,
         learning_rate_schedule: Literal["constant", "time_based", "exponential"] = "constant",
@@ -197,7 +194,6 @@ class GradientDescent(LinearModel):
         self.beta2 = beta2
         self.rho = rho
         self.eps = eps
-        self.fit_intercept_column = fit_intercept_column
         self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.learning_rate_schedule = learning_rate_schedule
@@ -223,7 +219,10 @@ class GradientDescent(LinearModel):
         opt: Optimizer,
     ) -> _FitResult:
         """One `optimizer.step` per iteration on the full training set, up to
-        `max_iter` iterations, stopping early once `max(abs(grad)) < tol`."""
+        `max_iter` iterations, stopping early once `max(abs(grad)) < tol`.
+        With zero features (e.g. a degree-0 polynomial, no slope terms left
+        once the intercept is centered out) there is nothing to iterate on:
+        the only step is the trivial empty coefficient vector."""
         n_samples, n_features = X.shape
         opt.reset(n_features)
         theta = np.zeros(n_features, dtype=np.float64)
@@ -232,12 +231,12 @@ class GradientDescent(LinearModel):
         cost_flops = []
         flops = 0
         for _ in range(self.max_iter):
-            grad = grad_fn(X, y, theta, self.lam, self.fit_intercept_column)
+            grad = grad_fn(X, y, theta, self.lam)
             theta = opt.step(theta, grad)
             flops += gradient_flops(n_samples, n_features)
-            cost_history.append(cost_fn(X, y, theta, self.lam, self.fit_intercept_column))
+            cost_history.append(cost_fn(X, y, theta, self.lam))
             cost_flops.append(flops)
-            if np.max(np.abs(grad)) < self.tol:
+            if grad.size == 0 or np.max(np.abs(grad)) < self.tol:
                 break
 
         return (
@@ -277,12 +276,12 @@ class GradientDescent(LinearModel):
                 X_batch, y_batch = X[batch_idx], y[batch_idx]
 
                 opt.learning_rate = schedule(t)
-                grad = grad_fn(X_batch, y_batch, theta, self.lam, self.fit_intercept_column)
+                grad = grad_fn(X_batch, y_batch, theta, self.lam)
                 theta = opt.step(theta, grad)
                 flops += gradient_flops(batch_idx.shape[0], n_features)
                 t += 1
 
-            cost_history.append(cost_fn(X, y, theta, self.lam, self.fit_intercept_column))
+            cost_history.append(cost_fn(X, y, theta, self.lam))
             cost_flops.append(flops)
 
         return (
@@ -292,16 +291,16 @@ class GradientDescent(LinearModel):
             t,
         )
 
-    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> Self:
-        """Fit theta by gradient descent or, if `batch_size` is set, SGD.
+    def _fit_centered(self, X: NDArray[np.float64], y_centered: NDArray[np.float64]) -> None:
+        """Fit theta by gradient descent or, if `batch_size` is set, SGD,
+        against the already mean-centered target.
 
         Args:
             X: Design matrix, shape (n_samples, n_features).
-            y: Target values, shape (n_samples,).
+            y_centered: Mean-centered targets, shape (n_samples,).
 
-        Returns:
-            self, with coef_, cost_history_, cost_flops_, n_iter_, and
-            n_updates_ set.
+        Sets:
+            coef_, cost_history_, cost_flops_, n_iter_, and n_updates_.
 
         Raises:
             ValueError: If `lam`/`lr_decay` is negative, `max_iter` (in
@@ -310,7 +309,7 @@ class GradientDescent(LinearModel):
                 `optimizer`/`learning_rate_schedule` is not one of the
                 supported names.
         """
-        X, y = self._validate_inputs(X, y)
+        y = y_centered
         if self.lam < 0:
             raise ValueError(f"lam must be non-negative, got {self.lam}.")
         if self.lr_decay < 0:
@@ -364,7 +363,6 @@ class GradientDescent(LinearModel):
         self.cost_flops_ = cost_flops
         self.n_iter_ = cost_history.shape[0]
         self.n_updates_ = n_updates
-        return self
 
 
 def gradient_descent_sweep(

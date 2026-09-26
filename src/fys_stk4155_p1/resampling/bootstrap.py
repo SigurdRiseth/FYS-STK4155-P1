@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from fys_stk4155_p1.data.design_matrix import univariate_polynomial_design_matrix
 from fys_stk4155_p1.regression.base import LinearModel
@@ -45,13 +46,17 @@ def bootstrap_bias_variance_sweep(
 ) -> dict[str, Any]:
     """Bias-variance decomposition of the test MSE via bootstrap, per degree.
 
-    For each degree, the polynomial design matrix (with an intercept column)
-    is split once into train/test. `n_bootstraps` bootstrap resamples of the
-    training split are then each used to fit a fresh `model_factory()` and
-    predict on the fixed test split, giving a matrix of test predictions of
-    shape (n_test, n_bootstraps). The test MSE, squared bias, and variance
-    are estimated from that matrix following Hastie, Tibshirani & Friedman
-    (ESL, eq. 7.9):
+    For each degree, the polynomial design matrix is split once into
+    train/test. `n_bootstraps` bootstrap resamples of the training split are
+    then each used to fit a fresh `model_factory()` and predict on the fixed
+    test split, giving a matrix of test predictions of shape (n_test,
+    n_bootstraps). Every column is standardized by a `StandardScaler` fit on
+    each bootstrap resample (never on the test split), since `model_factory`
+    fits its intercept by centering `y` alone (see `regression.base.
+    LinearModel`) -- that is only equivalent to a full joint fit with an
+    intercept term when the other columns are themselves mean-zero. The test
+    MSE, squared bias, and variance are estimated from the prediction matrix
+    following Hastie, Tibshirani & Friedman (ESL, eq. 7.9):
 
         error = E_boot[ (y_test - y_pred)^2 ]
         bias^2 = ( y_test - E_boot[y_pred] )^2   [in expectation, bias^2 + sigma^2]
@@ -97,7 +102,7 @@ def bootstrap_bias_variance_sweep(
     _, x_test = train_test_split(x, test_size=test_size, random_state=seed)
 
     for i, degree in enumerate(degrees_arr):
-        X = univariate_polynomial_design_matrix(x=x, degree=int(degree), intercept=True)
+        X = univariate_polynomial_design_matrix(x=x, degree=int(degree))
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, random_state=seed
         )
@@ -105,8 +110,13 @@ def bootstrap_bias_variance_sweep(
         y_pred = np.empty((y_test.shape[0], n_bootstraps))
         for b in range(n_bootstraps):
             X_, y_ = bootstrap_resample(X_train, y_train, rng)
+            if degree > 0:
+                scaler = StandardScaler().fit(X_)
+                X_, X_test_b = scaler.transform(X_), scaler.transform(X_test)
+            else:
+                X_test_b = X_test
             model = model_factory().fit(X_, y_)
-            y_pred[:, b] = model.predict(X_test)
+            y_pred[:, b] = model.predict(X_test_b)
 
         y_test_col = y_test.reshape(-1, 1)
         mse_test[i] = np.mean((y_test_col - y_pred) ** 2)

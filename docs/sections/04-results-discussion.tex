@@ -431,11 +431,11 @@ zero, which is the reason for the oscillation in the first place.
 
 At $p = 15$, with $\kappa = 2.6\times10^{10}$, the picture is much worse
 (\cref{fig:lasso_convergence}b). After $5\times10^4$ iterations Adam is at a
-gap of $1.2\times10^{-2}$, momentum at $2.5\times10^{-2}$, and the others above
+gap of $1.1\times10^{-2}$, momentum at $2.5\times10^{-2}$, and the others above
 $0.1$; scikit-learn's coordinate descent itself needs $4\times10^5$ passes.
 \Cref{fig:lasso_coefficients} compares the coefficients: scikit-learn sets five
 of the 15 to zero, while ours after 5000 iterations differ by up to $4.8$ and
-are as large as $1.7$ where scikit-learn's are zero; even after $5\times10^4$
+are as large as $1.6$ where scikit-learn's are zero; even after $5\times10^4$
 iterations they differ by up to $0.5$. Our Lasso fits at high degree are
 therefore early-stopped gradient descent rather than Lasso solutions. This
 explains the Lasso CV surface of \cref{fig:cv_heatmaps}c: at high degree the

@@ -12,14 +12,17 @@ def test_fit_returns_self() -> None:
 
 
 def test_recovers_known_line() -> None:
-    rng = np.random.default_rng(0)
-    x = rng.uniform(-1, 1, 50)
-    X = np.column_stack([np.ones_like(x), x])
+    # intercept_ is exactly y.mean() (see regression.base.LinearModel), which
+    # only equals the true intercept when x itself is already mean-zero --
+    # true of this symmetric linspace, unlike a finite random sample.
+    x = np.linspace(-1, 1, 51)
+    X = x.reshape(-1, 1)
     y = 3.0 + 2.0 * x
 
     model = OLS().fit(X, y)
 
-    np.testing.assert_allclose(model.coef_, [3.0, 2.0], atol=1e-10)
+    assert model.intercept_ == pytest.approx(3.0, abs=1e-10)
+    np.testing.assert_allclose(model.coef_, [2.0], atol=1e-10)
 
 
 def test_predict_matches_design_matrix_times_coef() -> None:
@@ -30,7 +33,7 @@ def test_predict_matches_design_matrix_times_coef() -> None:
     model = OLS().fit(X, y)
     y_pred = model.predict(X)
 
-    np.testing.assert_allclose(y_pred, X @ model.coef_)
+    np.testing.assert_allclose(y_pred, X @ model.coef_ + model.intercept_)
 
 
 def test_fit_is_deterministic() -> None:

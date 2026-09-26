@@ -57,7 +57,7 @@ def plot_convergence(e3: dict) -> Figure:
 def plot_coefficients(e3: dict) -> Figure:
     cfg = e3["configs"]["high_degree"]
     f = cfg["finals"]
-    sk = np.asarray(f["sklearn"]["coef"])[1:]
+    sk = np.asarray(f["sklearn"]["coef"])
     j = np.arange(1, len(sk) + 1)
     fig, ax = plt.subplots(figsize=COLUMN)
     ax.axhline(0, color="black", lw=0.5)
@@ -68,7 +68,7 @@ def plot_coefficients(e3: dict) -> Figure:
     ):
         ax.plot(
             j,
-            np.asarray(f[key]["coef"])[1:],
+            np.asarray(f[key]["coef"]),
             marker,
             ms=5,
             color=COLORS["adam"] if key == "adam_long" else COLORS["ridge"],
