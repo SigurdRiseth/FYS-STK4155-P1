@@ -21,7 +21,7 @@ where $\bm{f} = (f(x_0), \dots, f(x_{n-1}))^\top$ collects the values of an
 unknown function $f$ and the noise is i.i.d.\ Gaussian with zero mean and variance
 $\sigma^2$. A polynomial model of degree $p$ is linear in its parameters: with
 the design matrix $\bm{X} \in \mathbb{R}^{n\times p}$, containing the columns
-$x, \dots, x^p$, and the parameter vector $\bm{\theta}\in\mathbb{R}^{p}$, the
+$\bm{x}, \dots, \bm{x}^p$, and the parameter vector $\bm{\theta}\in\mathbb{R}^{p}$, the
 prediction is $\tilde{\bm{y}} = \beta_0 + \bm{X}\bm{\theta}$, with the
 intercept $\beta_0$ fit separately from $\bm\theta$ by centering the target
 rather than through a column of $\bm{X}$ (\cref{subsec:data})~\cite{hjorth-jensen_2026}.
@@ -37,7 +37,7 @@ Any matrix $\bm{X}$ can be factorized as
 $\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^\top$, with $\bm{U}$ and $\bm{V}$ orthogonal and
 $\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_0 \geq \sigma_1 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
 \sigma_{\max}/\sigma_{\min}$ is the 2-norm condition number of $\bm{X}$~\cite{hjorth-jensen_2026}.
-The monomial columns $x^j$ on $[-1,1]$ become nearly parallel as $j$ grows,
+The monomial columns $\bm{x}^j$ on $[-1,1]$ become nearly parallel as $j$ grows,
 so $\kappa_2(\bm{X})$ grows exponentially with the degree; this ill-conditioning
 is behind several of our numerical results.
 
@@ -102,8 +102,8 @@ sensitive to noise~\cite{hjorth-jensen_2026}.
 \subsubsection{Lasso regression}
 Lasso~\cite{tibshirani_1996} applies an $\ell_1$ penalty,
 \begin{equation}\label{eq:lasso-theta-hat}
-    C_\text{Lasso}(\bm{\theta}) = \underbrace{\frac{1}{n}\left\lVert \bm{y}
-    - \bm{X}\bm{\theta} \right\rVert_2^2}_{g(\bm{\theta})}
+    C_\text{Lasso}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{y}
+    - \bm{X}\bm{\theta} \right\rVert_2^2
     + \lambda \lVert \bm{\theta} \rVert_1 .
 \end{equation}
 The cost is convex but not differentiable where a coefficient is zero, and it
@@ -153,15 +153,15 @@ $\mathbb{E}[\tilde{\bm{y}}]$,
 \begin{equation}
     \mathbb{E}\!\left[(\bm{y}-\tilde{\bm{y}})^2\right]
     =\mathbb{E}\!\left[\big(
-        \underbrace{\bm{f}-\mathbb{E}[\tilde{\bm{y}}]}_{a}
-        +\underbrace{\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}}_{b}
-        +\underbrace{\bm{\varepsilon}}_{c}
+        \underbrace{\bm{f}-\mathbb{E}[\tilde{\bm{y}}]}_{\bm{a}}
+        +\underbrace{\mathbb{E}[\tilde{\bm{y}}]-\tilde{\bm{y}}}_{\bm{b}}
+        +\underbrace{\bm{\varepsilon}}_{\bm{c}}
     \big)^2\right].
 \end{equation}
-The cross terms vanish: $a$ is deterministic and $\mathbb{E}[b]=\bm{0}$, so
-$\mathbb{E}[ab]=a\,\mathbb{E}[b]=\bm{0}$; $\mathbb{E}[ac]=a\,\mathbb{E}[
+The cross terms vanish: $\bm{a}$ is deterministic and $\mathbb{E}[\bm{b}]=\bm{0}$, so
+$\mathbb{E}[\bm{a}\bm{b}]=\bm{a}\,\mathbb{E}[\bm{b}]=\bm{0}$; $\mathbb{E}[\bm{a}\bm{c}]=\bm{a}\,\mathbb{E}[
 \bm{\varepsilon}]=\bm{0}$; and $\bm{\varepsilon}$ is independent of
-$\tilde{\bm{y}}$, so $\mathbb{E}[bc]=\mathbb{E}[b]\,\mathbb{E}[\bm{\varepsilon}]
+$\tilde{\bm{y}}$, so $\mathbb{E}[\bm{b}\bm{c}]=\mathbb{E}[\bm{b}]\,\mathbb{E}[\bm{\varepsilon}]
 =\bm{0}$. What remains is
 \begin{equation}\label{eq:bias-variance-decomposition}
     \mathbb{E}\!\left[(\bm{y}-\tilde{\bm{y}})^2\right]
@@ -281,7 +281,7 @@ Momentum adds a fraction of the previous step,
 with $\beta\in[0,1)$ and $\bm{v}^{(0)} = \bm{0}$. Along directions where the
 gradient keeps its sign the steps accumulate, while oscillations across a narrow
 valley partly cancel; this is what makes momentum effective for ill-conditioned
-Hessians~\cite{goodfellow_2016}.
+Hessians~\cite{goodfellow_2016,hjorth-jensen_2026}.
 
 \subsubsection{Adaptive learning rates}
 AdaGrad~\cite{duchi_2011} scales every coordinate by the
