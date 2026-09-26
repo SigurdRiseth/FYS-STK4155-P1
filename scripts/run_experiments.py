@@ -69,18 +69,19 @@ def _oracle_mse(pred_grid: NDArray) -> float:
 
 
 def _ridge(lam: float) -> Ridge:
-    return Ridge(lam=lam, fit_intercept_column=True)
+    return Ridge(lam=lam)
 
 
 def _lasso(lam: float, **overrides: Any) -> Lasso:
     kwargs = dict(C.LASSO_GD) | overrides
-    return Lasso(lam=lam, fit_intercept_column=True, **kwargs)
+    return Lasso(lam=lam, **kwargs)
 
 
 def _sk_lasso(lam: float) -> SkLasso:
     # sklearn: (1/2n)||y - Xw - b||^2 + alpha ||w||_1; ours: (1/n)||.||^2 + lam ||w||_1
-    # -> alpha = lam / 2. The all-ones column is centred to zero inside sklearn, so its
-    # coefficient stays 0 and sklearn's own (unpenalized) intercept takes its place.
+    # -> alpha = lam / 2. fit_intercept=True: X has no intercept column (see
+    # data.design_matrix), so sklearn fits its own b, matching how our own
+    # models fit intercept_ by centering y (see regression.base.LinearModel).
     return SkLasso(alpha=lam / 2, fit_intercept=True, max_iter=1_000_000, tol=1e-10)
 
 
@@ -238,7 +239,7 @@ def _e2_seed(seed: int) -> dict:
         p_te, p_grid = _fit_predict(s["degree"], model, x_tr, y_tr, x_te, C.X_GRID)
         s["test_mse"] = float(np.mean((y_te - p_te) ** 2))
         s["oracle_mse"] = _oracle_mse(p_grid)
-        s["n_nonzero"] = int(np.sum(model.coef_[1:] != 0))
+        s["n_nonzero"] = int(np.sum(model.coef_ != 0))
         s["coef"] = model.coef_
 
     out: dict[str, Any] = {"seed": seed, "selected": sel}
@@ -323,12 +324,17 @@ def _downsample(h: NDArray, n: int = 400) -> dict[str, list]:
 def _e3_config(d: int, lam: float) -> dict[str, Any]:
     _, _, x_tr, _, y_tr, _ = _data(C.SEED)
     (X,) = design(x_tr, d)
+    # lasso_cost never centers y itself; Lasso/sklearn's Lasso do it
+    # internally (see regression.base.LinearModel and _sk_lasso), so F must
+    # be evaluated against the same centered target for F_star to be
+    # comparable to model.cost_history_.
+    y_c = y_tr - y_tr.mean()
 
     def F(theta: NDArray) -> float:
-        return float(lasso_cost(X, y_tr, theta, lam, True))
+        return float(lasso_cost(X, y_c, theta, lam))
 
     sk = _sk_lasso(lam).fit(X, y_tr)
-    sk_theta = np.concatenate([[sk.intercept_], sk.coef_[1:]])
+    sk_theta = sk.coef_
     F_star = F(sk_theta)
     L = float(np.linalg.eigvalsh(2 / len(y_tr) * X.T @ X)[-1])
 
@@ -342,24 +348,24 @@ def _e3_config(d: int, lam: float) -> dict[str, Any]:
     }
     traces = {}
     for name, kw in runs.items():
-        model = Lasso(lam=lam, max_iter=n_it, tol=0.0, fit_intercept_column=True, **kw)
+        model = Lasso(lam=lam, max_iter=n_it, tol=0.0, **kw)
         model.fit(X, y_tr)
         gap = (np.asarray(model.cost_history_) - F_star) / F_star
         traces[name] = _downsample(np.maximum(gap, 1e-16)) | {"learning_rate": kw["learning_rate"]}
     finals: dict[str, Any] = {}
     for name, iters in (("adam_default", C.LASSO_GD["max_iter"]), ("adam_long", n_it)):
         th = _lasso(lam, max_iter=iters, tol=0.0).fit(X, y_tr).coef_
-        on_zero = th[1:][sk_theta[1:] == 0]
+        on_zero = th[sk_theta == 0]
         finals[name] = {
             "iters": iters,
             "rel_cost_gap": (F(th) - F_star) / F_star,
-            "n_exact_zero": int(np.sum(th[1:] == 0)),
+            "n_exact_zero": int(np.sum(th == 0)),
             "max_abs_on_sklearn_zeros": float(np.max(np.abs(on_zero), initial=0.0)),
             "max_abs_diff_vs_sklearn": float(np.max(np.abs(th - sk_theta))),
             "coef": th,
         }
     finals["sklearn"] = {
-        "n_exact_zero": int(np.sum(sk_theta[1:] == 0)),
+        "n_exact_zero": int(np.sum(sk_theta == 0)),
         "n_iter": int(sk.n_iter_),
         "coef": sk_theta,
     }
@@ -413,10 +419,16 @@ def _e4_problem(d: int, lam: float) -> tuple[NDArray, NDArray, NDArray, dict]:
     _, _, x_tr, _, y_tr, _ = _data(C.SEED)
     (X,) = design(x_tr, d)
     theta_star = (OLS() if lam == 0 else _ridge(lam)).fit(X, y_tr).coef_
-    pen = np.eye(X.shape[1])
-    pen[0, 0] = 0
-    eig = np.linalg.eigvalsh(2 / X.shape[0] * X.T @ X + 2 * lam * pen)
-    return X, y_tr, theta_star, {"L": eig[-1], "mu": eig[0], "kappa": eig[-1] / eig[0]}
+    eig = np.linalg.eigvalsh(2 / X.shape[0] * X.T @ X + 2 * lam * np.eye(X.shape[1]))
+    # cost()/analytical_gradient() (via iterations_to_tolerance) never center
+    # y themselves; OLS/Ridge do it internally (see regression.base.
+    # LinearModel), so theta_star must be paired with the same centered y.
+    return (
+        X,
+        y_tr - y_tr.mean(),
+        theta_star,
+        {"L": eig[-1], "mu": eig[0], "kappa": eig[-1] / eig[0]},
+    )
 
 
 def _e4_task(args: tuple) -> dict:
@@ -431,7 +443,6 @@ def _e4_task(args: tuple) -> dict:
         opt,
         float(lr),
         lam=lam,
-        fit_intercept_column=True,
         param_tol=C.GD_PARAM_TOL,
         max_iter=C.GD_MAX_ITER,
         **OPTIMIZERS[opt],
@@ -486,7 +497,7 @@ def run_e5(a: argparse.Namespace) -> None:
     for d in (5, 10, 15):
         (X,) = design(x_tr, d)
         diffs: dict[str, list[float]] = {"ols": [], "ridge": [], "lasso": []}
-        GradFn = Callable[[NDArray, NDArray, NDArray, float, bool], NDArray]
+        GradFn = Callable[[NDArray, NDArray, NDArray, float], NDArray]
         cases: list[tuple[str, GradFn, GradFn, float]] = [
             ("ols", analytical_gradient, autodiff_gradient, 0.0),
             ("ridge", analytical_gradient, autodiff_gradient, 0.1),
@@ -495,8 +506,8 @@ def run_e5(a: argparse.Namespace) -> None:
         for _ in range(100):
             th = rng.normal(size=int(X.shape[1]))
             for name, fa, fb, lam in cases:
-                ga = np.asarray(fa(X, y_tr, th, lam, True))
-                gb = np.asarray(fb(X, y_tr, th, lam, True))
+                ga = np.asarray(fa(X, y_tr, th, lam))
+                gb = np.asarray(fb(X, y_tr, th, lam))
                 diffs[name].append(float(np.max(np.abs(ga - gb)) / np.max(np.abs(ga))))
         out[f"deg{d}"] = {
             k: {"max_rel": max(v), "median_rel": float(np.median(v))} for k, v in diffs.items()
@@ -504,11 +515,11 @@ def run_e5(a: argparse.Namespace) -> None:
     # derivative of |theta| at exactly 0: analytical (np.sign) vs JAX
     (X,) = design(x_tr, 5)
     th0 = np.zeros(X.shape[1])
-    ga = np.asarray(lasso_subgradient(X, y_tr, th0, 1.0, True))
-    gb = np.asarray(lasso_autodiff_gradient(X, y_tr, th0, 1.0, True))
+    ga = np.asarray(lasso_subgradient(X, y_tr, th0, 1.0))
+    gb = np.asarray(lasso_autodiff_gradient(X, y_tr, th0, 1.0))
     out["at_zero"] = {
-        "analytical_minus_mse_grad": ga - np.asarray(analytical_gradient(X, y_tr, th0, 0.0, True)),
-        "autodiff_minus_mse_grad": gb - np.asarray(analytical_gradient(X, y_tr, th0, 0.0, True)),
+        "analytical_minus_mse_grad": ga - np.asarray(analytical_gradient(X, y_tr, th0, 0.0)),
+        "autodiff_minus_mse_grad": gb - np.asarray(analytical_gradient(X, y_tr, th0, 0.0)),
     }
     _save("e5_autodiff", {"summary": out})
     print(json.dumps(_to_json(out), indent=1))

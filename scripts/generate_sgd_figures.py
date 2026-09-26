@@ -43,18 +43,21 @@ _OPT_NAMES: tuple[OptName, OptName] = ("plain", "adam")
 def _problem() -> tuple[NDArray, NDArray]:
     _, _, x_tr, _, y_tr, _ = data()
     (X,) = design(x_tr, C.GD_DEGREE)
-    return X, y_tr
+    # cost() never centers y itself; GradientDescent/Ridge do it internally
+    # (see regression.base.LinearModel), so pre-centering here keeps the two
+    # consistent.
+    return X, y_tr - y_tr.mean()
 
 
 def _lr(X: NDArray, optimizer: str, lam: float) -> float:
     if optimizer == "adam":
         return ADAM_LR
-    return 1.0 / float(hessian_max_eigenvalue(X, lam=lam, fit_intercept_column=True))
+    return 1.0 / float(hessian_max_eigenvalue(X, lam=lam))
 
 
 def _gap(X: NDArray, y: NDArray, lam: float) -> Any:
-    theta_star = Ridge(lam=lam, fit_intercept_column=True).fit(X, y).coef_
-    J_star = float(cost(X, y, theta_star, lam, fit_intercept_column=True))
+    theta_star = Ridge(lam=lam).fit(X, y).coef_
+    J_star = float(cost(X, y, theta_star, lam))
     return lambda history: (np.asarray(history) - J_star) / J_star
 
 
@@ -76,9 +79,7 @@ def plot_batch_size_sweep(X: NDArray, y: NDArray) -> Figure:
                     "lr_decay": LR_DECAY,
                 }
             )
-            gd = GradientDescent(
-                learning_rate=_lr(X, opt, 0.0), optimizer=opt, fit_intercept_column=True, **kwargs
-            ).fit(X, y)
+            gd = GradientDescent(learning_rate=_lr(X, opt, 0.0), optimizer=opt, **kwargs).fit(X, y)
             ax.plot(
                 gd.cost_flops_,
                 np.maximum(gap(gd.cost_history_), 1e-16),
@@ -125,7 +126,6 @@ def sgd_table(X: NDArray, y: NDArray, batch: int = 16, repeats: int = 3) -> str:
                         learning_rate=_lr(X, opt, lam),
                         lam=lam,
                         optimizer=opt,
-                        fit_intercept_column=True,
                         **kwargs,
                     ).fit(X, y)
                     times.append((time.perf_counter() - t0) * 1e3)

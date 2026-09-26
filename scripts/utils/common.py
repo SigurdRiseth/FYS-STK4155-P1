@@ -34,14 +34,16 @@ def data(
 
 
 def design(x_fit: NDArray, degree: int, *x_eval: NDArray) -> list[NDArray]:
-    """Polynomial design matrices with an intercept column; x^1..x^d standardized
-    with the statistics of `x_fit` (the training rows), as in the CV pipelines."""
-    X_fit = univariate_polynomial_design_matrix(x_fit, degree, intercept=True)
-    Xs = [univariate_polynomial_design_matrix(xe, degree, intercept=True) for xe in x_eval]
+    """Polynomial design matrices (x^1..x^d, no intercept column -- the model
+    fits its intercept by centering y instead, see regression.base.LinearModel),
+    standardized with the statistics of `x_fit` (the training rows), as in the
+    CV pipelines."""
+    X_fit = univariate_polynomial_design_matrix(x_fit, degree)
+    Xs = [univariate_polynomial_design_matrix(xe, degree) for xe in x_eval]
     if degree > 0:
-        scaler = StandardScaler().fit(X_fit[:, 1:])
-        X_fit = np.column_stack([X_fit[:, :1], scaler.transform(X_fit[:, 1:])])
-        Xs = [np.column_stack([X[:, :1], scaler.transform(X[:, 1:])]) for X in Xs]
+        scaler = StandardScaler().fit(X_fit)
+        X_fit = scaler.transform(X_fit)
+        Xs = [scaler.transform(X) for X in Xs]
     return [X_fit, *Xs]
 
 

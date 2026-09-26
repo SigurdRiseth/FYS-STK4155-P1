@@ -34,8 +34,6 @@ class Lasso(GradientDescent):
         rho: Squared-gradient decay, used only when `optimizer="rmsprop"`.
         eps: Numerical-stability constant, used by every optimizer except
             "plain" and "momentum".
-        fit_intercept_column: If True, the first column of X is treated as
-            an all-ones intercept term and is excluded from the penalty.
         batch_size: Mini-batch size for SGD. `None` (the default) fits by
             full-batch gradient descent instead.
         n_epochs: Number of passes over the training set. Only used when
@@ -61,7 +59,6 @@ class Lasso(GradientDescent):
         beta2: float = 0.999,
         rho: float = 0.9,
         eps: float = 1e-8,
-        fit_intercept_column: bool = False,
         batch_size: int | None = None,
         n_epochs: int = 100,
         learning_rate_schedule: Literal["constant", "time_based", "exponential"] = "constant",
@@ -80,7 +77,6 @@ class Lasso(GradientDescent):
             beta2=beta2,
             rho=rho,
             eps=eps,
-            fit_intercept_column=fit_intercept_column,
             batch_size=batch_size,
             n_epochs=n_epochs,
             learning_rate_schedule=learning_rate_schedule,

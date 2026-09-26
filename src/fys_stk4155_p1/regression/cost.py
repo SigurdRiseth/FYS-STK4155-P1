@@ -1,5 +1,7 @@
 """Cost, gradient, and Hessian eigenvalue for OLS/Ridge (L2) and Lasso (L1), used by
-gradient descent."""
+gradient descent. `theta` is never expected to carry an intercept row: it is always
+regularized in full (see `regression.base.LinearModel`, which centers `y` and adds the
+intercept back separately)."""
 
 import numpy as np
 from numpy.typing import NDArray
@@ -12,12 +14,8 @@ def cost(
     y: NDArray[np.float64],
     theta: NDArray[np.float64],
     lam: float = 0.0,
-    fit_intercept_column: bool = False,
 ) -> np.float64:
     """Compute the mean squared error with L2 regularization.
-
-    The regularization penalty is excluded from the intercept term when
-    ``fit_intercept_column`` is True.
 
     This matches Eq. (3.43) in Hjorth-Jensen (2026).
 
@@ -26,18 +24,12 @@ def cost(
         y: True target values, shape (n_samples,).
         theta: Model parameters, shape (n_features,).
         lam: L2 regularization strength. Defaults to 0.0.
-        fit_intercept_column: Whether the first column of X/theta is an
-            intercept and should therefore be excluded from regularization.
-            Defaults to False.
 
     Returns:
         The mean squared error plus the L2 regularization penalty.
     """
     y_pred = X @ theta
-
-    penalty_theta = theta[1:] if fit_intercept_column else theta
-
-    return mean_squared_error(y, y_pred) + lam * np.sum(penalty_theta**2)
+    return mean_squared_error(y, y_pred) + lam * np.sum(theta**2)
 
 
 def analytical_gradient(
@@ -45,13 +37,10 @@ def analytical_gradient(
     y: NDArray[np.float64],
     theta: NDArray[np.float64],
     lam: float = 0.0,
-    fit_intercept_column: bool = False,
 ) -> NDArray[np.float64]:
     """Gradient of ``cost`` with respect to theta.
 
-    (2/n) X^T (X theta - y) + 2*lam*theta, with theta[0]'s penalty
-    contribution zeroed out (not dropped, so the return shape still matches
-    theta) when fit_intercept_column is True.
+    (2/n) X^T (X theta - y) + 2*lam*theta.
 
     This matches Eq. (4.17) from Hjorth-Jensen.
 
@@ -60,20 +49,12 @@ def analytical_gradient(
         y: True target values, shape (n_samples,).
         theta: Model parameters, shape (n_features,).
         lam: L2 regularization strength. Defaults to 0.0.
-        fit_intercept_column: Whether the first column of X/theta is an
-            intercept and should therefore be excluded from regularization.
-            Defaults to False.
 
     Returns:
         The gradient of the cost with respect to theta, shape (n_features,).
     """
     n = X.shape[0]
-
-    penalty_theta = np.copy(theta)
-    if fit_intercept_column:
-        penalty_theta[0] = 0.0
-
-    return 2 / n * X.T @ (X @ theta - y) + 2 * lam * penalty_theta
+    return 2 / n * X.T @ (X @ theta - y) + 2 * lam * theta
 
 
 def lasso_cost(
@@ -81,31 +62,23 @@ def lasso_cost(
     y: NDArray[np.float64],
     theta: NDArray[np.float64],
     lam: float = 0.0,
-    fit_intercept_column: bool = False,
 ) -> np.float64:
     """Compute the mean squared error with L1 (Lasso) regularization.
 
     Same shape as `cost`, but penalizes ``sum(abs(theta))`` instead of
-    ``sum(theta**2)``. The regularization penalty is excluded from the
-    intercept term when ``fit_intercept_column`` is True.
+    ``sum(theta**2)``.
 
     Args:
         X: Feature matrix, shape (n_samples, n_features).
         y: True target values, shape (n_samples,).
         theta: Model parameters, shape (n_features,).
         lam: L1 regularization strength. Defaults to 0.0.
-        fit_intercept_column: Whether the first column of X/theta is an
-            intercept and should therefore be excluded from regularization.
-            Defaults to False.
 
     Returns:
         The mean squared error plus the L1 regularization penalty.
     """
     y_pred = X @ theta
-
-    penalty_theta = theta[1:] if fit_intercept_column else theta
-
-    return mean_squared_error(y, y_pred) + lam * np.sum(np.abs(penalty_theta))
+    return mean_squared_error(y, y_pred) + lam * np.sum(np.abs(theta))
 
 
 def lasso_subgradient(
@@ -113,13 +86,10 @@ def lasso_subgradient(
     y: NDArray[np.float64],
     theta: NDArray[np.float64],
     lam: float = 0.0,
-    fit_intercept_column: bool = False,
 ) -> NDArray[np.float64]:
     """A subgradient of `lasso_cost` with respect to theta.
 
-    (2/n) X^T (X theta - y) + lam*sign(theta), with theta[0]'s penalty
-    contribution zeroed out (not dropped, so the return shape still matches
-    theta) when fit_intercept_column is True.
+    (2/n) X^T (X theta - y) + lam*sign(theta).
 
     ``|theta_j|`` is not differentiable at ``theta_j = 0``; its subdifferential
     there is the interval [-1, 1]. This uses ``np.sign(0) == 0``, the
@@ -134,21 +104,13 @@ def lasso_subgradient(
         y: True target values, shape (n_samples,).
         theta: Model parameters, shape (n_features,).
         lam: L1 regularization strength. Defaults to 0.0.
-        fit_intercept_column: Whether the first column of X/theta is an
-            intercept and should therefore be excluded from regularization.
-            Defaults to False.
 
     Returns:
         A subgradient of the L1-penalized cost with respect to theta, shape
         (n_features,).
     """
     n = X.shape[0]
-
-    penalty_theta = np.copy(theta)
-    if fit_intercept_column:
-        penalty_theta[0] = 0.0
-
-    return 2 / n * X.T @ (X @ theta - y) + lam * np.sign(penalty_theta)
+    return 2 / n * X.T @ (X @ theta - y) + lam * np.sign(theta)
 
 
 def sklearn_alpha_to_lam(alpha: float) -> float:
@@ -202,14 +164,8 @@ def gradient_flops(n_samples: int, n_features: int) -> int:
     return 4 * n_samples * n_features
 
 
-def hessian_max_eigenvalue(
-    X: NDArray[np.float64], lam: float = 0.0, fit_intercept_column: bool = False
-) -> np.float64:
-    """Largest eigenvalue of (2/n) X^T X (+ 2*lam*I), via np.linalg.eigvalsh.
-
-    The intercept row/column of the penalty term is zeroed out when
-    fit_intercept_column is True, mirroring ridge.Ridge.fit's penalty
-    matrix.
+def hessian_max_eigenvalue(X: NDArray[np.float64], lam: float = 0.0) -> np.float64:
+    """Largest eigenvalue of (2/n) X^T X + 2*lam*I, via np.linalg.eigvalsh.
 
     This matches Eq. (4.17) from Hjorth-Jensen (2026), which is also
     analytical_gradient's linear (in theta) coefficient: differentiating
@@ -222,20 +178,12 @@ def hessian_max_eigenvalue(
     Args:
         X: Feature matrix, shape (n_samples, n_features).
         lam: L2 regularization strength. Defaults to 0.0.
-        fit_intercept_column: Whether the first column of X/theta is an
-            intercept and should therefore be excluded from regularization.
-            Defaults to False.
 
     Returns:
         The largest eigenvalue of the cost's Hessian with respect to theta.
     """
     n_samples, n_features = X.shape
-
-    penalty = np.eye(n_features)
-    if fit_intercept_column:
-        penalty[0, 0] = 0.0
-
-    hessian = 2 / n_samples * X.T @ X + 2 * lam * penalty
+    hessian = 2 / n_samples * X.T @ X + 2 * lam * np.eye(n_features)
 
     # eigvalsh returns eigenvalues in ascending order for symmetric input.
     return np.linalg.eigvalsh(hessian)[-1]

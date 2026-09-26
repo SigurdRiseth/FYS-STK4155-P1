@@ -60,12 +60,12 @@ def plot_test_mse_by_lambda() -> Figure:
 
 def plot_ridge_trace(X: NDArray, y: NDArray) -> Figure:
     lambdas = np.logspace(-10, 1, 111)
-    path = ridge_coefficient_path(X, y, lambdas, fit_intercept_column=True)
-    p = X.shape[1] - 1
+    path = ridge_coefficient_path(X, y, lambdas)
+    p = X.shape[1]
     fig, ax = plt.subplots(figsize=COLUMN)
     cmap = plt.get_cmap("viridis")
     for j in range(1, p + 1):
-        ax.plot(lambdas, path[:, j], color=cmap((j - 1) / (p - 1)), lw=0.8)
+        ax.plot(lambdas, path[:, j - 1], color=cmap((j - 1) / (p - 1)), lw=0.8)
     ax.set_xscale("log")
     ax.set_yscale("symlog", linthresh=1)
     ax.set_xlabel(r"$\lambda$")
@@ -76,7 +76,7 @@ def plot_ridge_trace(X: NDArray, y: NDArray) -> Figure:
 
 def plot_shrinkage(X: NDArray) -> Figure:
     lambdas = np.logspace(-10, 0, 6)
-    s, shrink = singular_value_shrinkage(X[:, 1:], lambdas)
+    s, shrink = singular_value_shrinkage(X, lambdas)
     fig, ax = plt.subplots(figsize=COLUMN)
     cmap = plt.get_cmap("plasma")
     idx = np.arange(1, len(s) + 1)
