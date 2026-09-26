@@ -133,7 +133,9 @@ $\bar{y}$ and is negative for a model that does worse than that constant~\cite{h
 \subsection{Bias--variance decomposition}
 \label{subsec:bias-variance}
 
-The prediction $\tilde{\bm{y}}$ at a fixed set of test inputs is a random
+We decompose the expected squared error $\mathbb{E}[(\bm{y}-\tilde{\bm{y}})^2]$,
+the quantity MSE estimates, into bias, variance, and irreducible noise. The
+prediction $\tilde{\bm{y}}$ at a fixed set of test inputs is a random
 quantity, because the parameters are fitted on a training set that is itself
 random. Below, $\mathbb{E}$ is taken jointly over the draw of the training set
 (in the bootstrap: over the resampled training sets) and over the noise
@@ -141,7 +143,8 @@ $\bm{\varepsilon}$ on the test targets, which is independent of the training set
 \cite{hjorth-jensen_2026}. Squares of vectors are
 elementwise and averaged over the test points.
 
-Adding and subtracting $\mathbb{E}[\tilde{\bm{y}}]$,
+Writing $\bm{y}=\bm{f}+\bm{\varepsilon}$ and adding and subtracting
+$\mathbb{E}[\tilde{\bm{y}}]$,
 \begin{equation}
     \mathbb{E}\!\left[(\bm{y}-\tilde{\bm{y}})^2\right]
     =\mathbb{E}\!\left[\big(
@@ -217,19 +220,17 @@ In $k$-fold cross-validation (CV), the data are split into $k$ disjoint folds of
 and evaluated on the held-out fold~\cite{geron_2023}. The
 CV estimate of the test error is the mean of the $k$ fold errors,
 \begin{equation}\label{eq:cv}
-    \mathrm{CV}_k = \frac{1}{k}\sum_{\ell=1}^{k}\mathrm{MSE}\big(
-    \bm{y}_{\ell}, \tilde{\bm{y}}_{\ell}^{(-\ell)}\big),
+    \mathrm{CV}_k = \frac{1}{k}\sum_{i=1}^{k}\mathrm{MSE}\big(
+    \bm{y}_{i}, \tilde{\bm{y}}_{i}^{(-i)}\big),
 \end{equation}
-where $\tilde{\bm{y}}_{\ell}^{(-\ell)}$ is the prediction for fold $\ell$ of the
+where $\tilde{\bm{y}}_{i}^{(-i)}$ is the prediction for fold $i$ of the
 model trained without it. We select hyperparameters (the degree $p$ and
 $\lambda$) by minimizing $\mathrm{CV}_k$ over a
-grid~\cite{hjorth-jensen_2026}. Every step that learns
-from the data, in our case the standardization of the features, must be fitted
-on the $k-1$ training folds only; otherwise information from the held-out fold
-leaks into the model and the estimate is biased
-downwards~\cite{hastie_2017}. Larger $k$ trains on
+grid~\cite{hjorth-jensen_2026}. Larger $k$ trains on
 more data per fit ($1-1/k$ of it), which reduces the pessimistic bias of the
-estimate, at the price of $k$ fits.
+estimate; but the $k$ training sets then overlap more, so the fold errors
+become more correlated and the average has higher
+variance~\cite{hastie_2017}.
 
 \subsection{Gradient-based optimization}
 \label{subsec:gradient-descent}
@@ -243,7 +244,7 @@ For a differentiable cost $C(\bm{\theta})$, gradient descent (GD) iterates
 with learning rate $\gamma > 0$. Newton's method,
 $\bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \bm{H}^{-1}\nabla_{\bm{\theta}}
 C(\bm{\theta}^{(k)})$, would solve a quadratic cost in one step, but forming and
-inverting the $q\times q$ Hessian costs $\mathcal{O}(q^3)$ for $q$ parameters;
+inverting the Hessian costs $\mathcal{O}(p^3)$ for $p$ parameters;
 GD replaces $\bm{H}^{-1}$ by $\gamma\bm{I}$ and costs one gradient evaluation
 per iteration~\cite{hjorth-jensen_2026}.
 

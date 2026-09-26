@@ -60,7 +60,7 @@ convention (hyperparameters in the constructor, \texttt{fit} and
 \texttt{predict}), so they can be used directly in scikit-learn's
 \texttt{Pipeline}, \texttt{KFold} and \texttt{cross\_validate}. \texttt{OLS}
 solves the least-squares problem through the SVD-based pseudoinverse with a
-relative singular-value cutoff of machine precision times $\max(n,q)$.
+relative singular-value cutoff of machine precision times $\max(n,p)$.
 \texttt{Ridge} solves the normal equations
 \cref{eq:ridge-theta-hat} with \texttt{numpy.linalg.solve}; the penalty makes the
 system well-posed for $\lambda>0$. \texttt{GradientDescent} minimizes the
