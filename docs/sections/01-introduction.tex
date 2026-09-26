@@ -1,0 +1,82 @@
+\section{Introduction}\label{sec:introduction}
+
+% An introduction where you explain the aims and rationale for the physics case
+% and what you have done. At the end of the introduction you should give a brief
+% summary of the structure of the report
+
+% Introduction (~1 page). Motivation (why polynomials, why Runge, the
+% high-degree failure, bias–variance), then what you did for linear models,
+% resampling and optimizers, stating explicitly what is your own code and what
+% is scikit-learn. It ends with a paragraph on the report's structure and the
+% repo link. No results, no MSE/
+
+Polynomial regression is among the simplest nontrivial regression problems, yet
+it already exhibits the central tension in model selection: increasing the
+degree reduces the approximation error, but increases sensitivity to noise in
+the data. The Weierstrass approximation theorem~\cite{weierstrass_1885} guarantees that any continuous
+function on a closed interval can be approximated uniformly to arbitrary
+accuracy by polynomials, but it says nothing about how to find such a polynomial
+from a finite set of noisy samples, or which degree to choose. Increasing the
+degree reduces the approximation error of the model class, yet it also makes the
+fitted coefficients increasingly sensitive to the particular data set. This
+tension is the bias--variance trade-off~\cite{hjorth-jensen_2026, hastie_2017}. Its lessons carry over essentially
+unchanged to the more flexible models used elsewhere in machine learning, which
+makes polynomial regression a transparent laboratory for them.
+
+Runge's function,
+\begin{equation}\label{eq:runges_function}
+  f(x) = \frac{1}{1+25x^2}, \qquad x\in[-1,1],
+\end{equation}
+is the classical example of how this can fail. Although $f$ is smooth,
+its polynomial interpolants on equispaced nodes diverge near the endpoints
+as the degree increases;
+this is Runge's phenomenon~\cite{runge_1901,demarchi_2020}. %verify runge1901
+Least-squares regression on noisy data is not interpolation,
+but it faces the same underlying difficulty in a statistical form.
+A high-degree fit on equispaced points is free to oscillate between the data,
+it fits the noise as readily as the signal,
+and the monomial design matrix becomes severely ill-conditioned.
+Runge's function therefore provides a demanding test of how model complexity
+should be selected and controlled.
+
+We study three linear models. Ordinary least squares (OLS) provides the
+unregularized baseline,
+whose test error as a function of degree exposes the trade-off directly.
+Ridge regression~\cite{hoerl_1970} and Lasso regression~\cite{tibshirani_1996} %verify
+add an $\ell_2$ and an $\ell_1$ penalty, respectively, trading a controlled increase in bias for
+a reduction in variance. The Ridge penalty shrinks all coefficients, while the Lasso penalty can
+set some of them exactly to zero. To estimate the test error and select the degree and penalty,
+we use two resampling methods: the bootstrap, which we also use to decompose the error into bias
+and variance, and $k$-fold cross-validation.
+
+OLS and Ridge have closed-form solutions, whereas Lasso does not, since its
+penalty is not differentiable at zero. We therefore also solve all three problems
+iteratively: OLS and Ridge with plain gradient descent, momentum, AdaGrad,
+RMSprop and Adam~\cite{kingma_2017}, full-batch and with
+mini-batches (stochastic gradient descent), and Lasso with the same update rules
+applied to a subgradient of its cost. The closed-form
+OLS and Ridge solutions serve as exact benchmarks for these optimizers. We
+compute gradients both analytically and by automatic
+differentiation~\cite{baydin_2018}, and verify that the two agree.
+
+All regression models, the gradient-descent solvers, the analytical
+gradients and the bootstrap are our own implementations. Cross-validation uses
+the \texttt{KFold} and \texttt{cross\_validate} utilities of
+\texttt{scikit-learn}~\cite{pedregosa_2011} around our
+estimators, automatic differentiation uses
+\texttt{JAX}~\cite{bradbury_2018}, and
+\texttt{scikit-learn}'s \texttt{Lasso} serves as an independent check of our
+Lasso solver. Because our data are synthetic, we can also compute the true test
+error of every fitted model from the known $f$, and we use it to judge how well
+the resampling estimates select models.
+
+The remainder of this report is structured as follows. \Cref{sec:method}
+presents the models, the bias--variance decomposition, the resampling methods
+and the optimization methods. \Cref{sec:implementation} describes the data,
+the preprocessing, the code and how it was verified.
+\Cref{sec:results-discussion} presents and discusses the results in the order
+OLS, Ridge, bias--variance, resampling and model selection, gradient descent,
+Lasso, and stochastic gradient descent, and \cref{sec:conclusion} summarizes our
+findings and outlines future work. Appendix~\ref{app:ai-tools} declares our use of
+large language models. All code, and the results behind every figure and table,
+are available in our repository~\cite{riseth_2026}.

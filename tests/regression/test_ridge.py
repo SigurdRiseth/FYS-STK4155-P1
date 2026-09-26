@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from fys_stk4155_p1.regression.ordinary_least_squares import OLS
 from fys_stk4155_p1.regression.ridge import Ridge
 
 
@@ -17,7 +18,7 @@ def test_zero_lambda_matches_ols() -> None:
     y = rng.normal(size=30)
 
     ridge_coef = Ridge(lam=0.0).fit(X, y).coef_
-    ols_coef = np.linalg.lstsq(X, y, rcond=None)[0]
+    ols_coef = OLS().fit(X, y).coef_
 
     np.testing.assert_allclose(ridge_coef, ols_coef, atol=1e-8)
 
@@ -33,19 +34,19 @@ def test_larger_lambda_shrinks_coefficients() -> None:
     assert np.linalg.norm(large_lam_coef) < np.linalg.norm(small_lam_coef)
 
 
-def test_fit_intercept_column_is_not_penalized() -> None:
+def test_intercept_is_never_penalized() -> None:
     rng = np.random.default_rng(2)
     x = rng.normal(size=30)
-    X = np.column_stack([np.ones_like(x), x])
+    X = x.reshape(-1, 1)
     y = 5.0 + 2.0 * x
 
-    model = Ridge(lam=1.0, fit_intercept_column=True).fit(X, y)
+    model = Ridge(lam=1.0).fit(X, y)
 
-    # a large penalty should still leave the (unpenalized) intercept close to
-    # the true value while shrinking the (penalized) slope towards zero.
-    unpenalized = Ridge(lam=1e6, fit_intercept_column=True).fit(X, y)
-    assert unpenalized.coef_[0] == pytest.approx(5.0, abs=0.5)
-    assert abs(unpenalized.coef_[1]) < abs(model.coef_[1])
+    # the intercept is always exactly the training mean, regardless of lam,
+    # while a large penalty still shrinks the (penalized) slope toward zero.
+    unpenalized = Ridge(lam=1e6).fit(X, y)
+    assert unpenalized.intercept_ == pytest.approx(y.mean())
+    assert abs(unpenalized.coef_[0]) < abs(model.coef_[0])
 
 
 def test_predict_matches_design_matrix_times_coef() -> None:
@@ -56,7 +57,7 @@ def test_predict_matches_design_matrix_times_coef() -> None:
     model = Ridge(lam=0.5).fit(X, y)
     y_pred = model.predict(X)
 
-    np.testing.assert_allclose(y_pred, X @ model.coef_)
+    np.testing.assert_allclose(y_pred, X @ model.coef_ + model.intercept_)
 
 
 def test_rejects_negative_lambda() -> None:

@@ -23,17 +23,16 @@ def fit_polynomial_degree_sweep(
 ) -> dict[str, Any]:
     """Fit a linear model on polynomial features of x, for each degree in `degrees`.
 
-    Builds the design matrix [x, x^2, ..., x^max(degrees)] once (no intercept
-    column), then for each degree slices out the first `degree` columns
-    (x^1..x^degree), standardizes them with a scaler fit on the training split
-    only, and fits `model_factory()` on the standardized features against the
-    centered target `y_train - y_mean`. The intercept isn't a fitted column:
-    since standardized features have zero mean, it's exactly `y_mean`, added
-    back at prediction time.
+    Builds the design matrix [x, x^2, ..., x^max(degrees)] once, then for
+    each degree slices out the first `degree` columns (x^1..x^degree) and
+    standardizes them with a scaler fit on the training split only.
+    `model_factory()` (a `LinearModel`) fits its own intercept by centering
+    `y` internally (see `regression.base.LinearModel`), so this just calls
+    `.fit(X_train_s, y_train)` directly.
 
     Model-agnostic so the same sweep drives both the OLS and Ridge
     polynomial-degree experiments: pass `OLS` itself, or e.g.
-    `lambda: Ridge(lam=lam, fit_intercept_column=False)` for a fixed `lam`.
+    `lambda: Ridge(lam=lam)` for a fixed `lam`.
 
     Args:
         x: x-coordinates, shape (n,).
@@ -54,22 +53,19 @@ def fit_polynomial_degree_sweep(
     degrees_arr = np.array(list(degrees))
     max_degree = int(degrees_arr.max())
 
-    X_full = univariate_polynomial_design_matrix(x=x, degree=max_degree, intercept=False)
+    X_full = univariate_polynomial_design_matrix(x=x, degree=max_degree)
 
     X_train_full, X_test_full, y_train, y_test = train_test_split(
         X_full, y, test_size=test_size, random_state=seed
     )
-
-    y_mean = y_train.mean()
-    y_train_centered = y_train - y_mean
 
     weights = []
     mse_train, mse_test = [], []
     r2_train, r2_test = [], []
 
     for degree in degrees_arr:
-        # No intercept column: X_full's columns are x^1..x^max_degree, so the
-        # first `degree` columns are x^1..x^degree.
+        # X_full's columns are x^1..x^max_degree, so the first `degree`
+        # columns are x^1..x^degree.
         X_train = X_train_full[:, :degree]
         X_test = X_test_full[:, :degree]
 
@@ -77,11 +73,11 @@ def fit_polynomial_degree_sweep(
         X_train_s = scaler.fit_transform(X_train)
         X_test_s = scaler.transform(X_test)
 
-        model = model_factory().fit(X_train_s, y_train_centered)
+        model = model_factory().fit(X_train_s, y_train)
         weights.append(model.coef_)
 
-        y_pred_train = model.predict(X_train_s) + y_mean
-        y_pred_test = model.predict(X_test_s) + y_mean
+        y_pred_train = model.predict(X_train_s)
+        y_pred_test = model.predict(X_test_s)
 
         mse_train.append(mean_squared_error(y_train, y_pred_train))
         mse_test.append(mean_squared_error(y_test, y_pred_test))
@@ -90,7 +86,7 @@ def fit_polynomial_degree_sweep(
 
     return {
         "degrees": degrees_arr,
-        "intercept": y_mean,
+        "intercept": y_train.mean(),
         "weights": weights,
         "mse_train": np.array(mse_train),
         "mse_test": np.array(mse_test),

@@ -1,193 +1,197 @@
 """
-Generate report figures for the gradient descent experiment (part E): does
-plain, fixed-learning-rate gradient descent converge to the closed-form
-OLS/Ridge solution, how many iterations does it take, and how does the
-largest stable learning rate relate to the cost Hessian's largest
-eigenvalue (Section 4.5 of the lecture notes)?
+Report figures and table for parts e) and f) (gradient descent):
 
-Usage:
-    uv run python scripts/generate_gradient_descent_figures.py [--degree 8]
-        [--n 200] [--noise 0.1] [--seed 42] [--lam 0.01] [--max-iter 2000]
-        [--out-subdir gradient_descent]
+* plain GD with analytical and automatic-differentiation gradients converging
+  to the closed-form OLS/Ridge solutions (GD_DEGREE, step 1/L);
+* stability: cost after a fixed number of steps vs. learning rate, relative
+  to the bound 2/lambda_max(H);
+* learning-rate sensitivity of all optimizers and the iterations-to-tolerance
+  table (from e4).
+
+All settings from utils/config.py; the e4 parts need
+data/results/e4_optimizers.json (`make experiments`).
+
+Usage: uv run python scripts/generate_gradient_descent_figures.py
+
+LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
+wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
+TODO(author): describe your review/changes.
 """
 
-import argparse
 from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from utils.plotting import FIGSIZE_WIDE, save_figure, set_style
+from utils import config as C
+from utils.common import data, design, load_result, write_table
+from utils.plotting import COLORS, COLUMN, LABELS, WIDE, save_figure, set_style
 
-from fys_stk4155_p1.data.design_matrix import univariate_polynomial_design_matrix
-from fys_stk4155_p1.data.runge import generate_runge_data
 from fys_stk4155_p1.regression.cost import cost, hessian_max_eigenvalue
 from fys_stk4155_p1.regression.gradient_descent import GradientDescent
 from fys_stk4155_p1.regression.ridge import Ridge
 
-
-def _standardize(
-    X_train: NDArray[np.float64], X_test: NDArray[np.float64]
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Scale non-intercept columns (fit on train only); leave column 0 untouched."""
-    scaler = StandardScaler()
-    X_train_s = np.column_stack([X_train[:, :1], scaler.fit_transform(X_train[:, 1:])])
-    X_test_s = np.column_stack([X_test[:, :1], scaler.transform(X_test[:, 1:])])
-    return X_train_s, X_test_s
+OPTIMIZERS = ["plain", "momentum", "adagrad", "rmsprop", "adam"]
 
 
-def plot_convergence(
-    X_train: NDArray[np.float64],
-    y_train: NDArray[np.float64],
-    lambdas: dict[str, float],
-    max_iter: int,
-    safety_factor: float,
-) -> Figure:
-    """Cost vs. iteration for plain GD, analytical and autodiff gradients overlaid.
+def _problem() -> tuple[NDArray, NDArray]:
+    _, _, x_tr, _, y_tr, _ = data()
+    (X,) = design(x_tr, C.GD_DEGREE)
+    # cost()/hessian_max_eigenvalue() never center y themselves; GradientDescent
+    # and Ridge do it internally (see regression.base.LinearModel), so pre-centering
+    # here keeps the two consistent.
+    return X, y_tr - y_tr.mean()
 
-    Each panel's learning rate is `safety_factor * 2 / hessian_max_eigenvalue(...)`
-    (Section 4.5), i.e. a fixed fraction of the largest stable rate for that
-    panel's own cost surface, so both panels converge in a comparable number
-    of steps despite Ridge's Hessian being better conditioned than OLS's.
-    """
-    # Independent y-scales: OLS's Hessian is far worse-conditioned than
-    # Ridge's, so its cost sits on a different scale and a shared axis would
-    # flatten out one panel's own convergence shape.
-    fig, axes = plt.subplots(1, len(lambdas), figsize=FIGSIZE_WIDE, sharey=False)
 
-    for ax, (label, lam) in zip(axes, lambdas.items(), strict=True):
-        gamma_max = 2 / hessian_max_eigenvalue(X_train, lam=lam, fit_intercept_column=True)
-        learning_rate = safety_factor * gamma_max
-
-        closed_form = Ridge(lam=lam, fit_intercept_column=True).fit(X_train, y_train)
-        closed_form_cost = cost(X_train, y_train, closed_form.coef_, lam, fit_intercept_column=True)
-
-        # analytical and autodiff agree to ~1e-10 (test_autodiff.py), so their
-        # cost histories coincide almost exactly; a thick solid line under a
-        # thin dashed one shows both are actually drawn, rather than one
-        # silently hiding behind the other.
-        gradient_method_styles: dict[Literal["analytical", "autodiff"], dict[str, object]] = {
-            "analytical": {"lw": 2.5, "ls": "-"},
-            "autodiff": {"lw": 1.25, "ls": "--"},
-        }
-        for gradient_method, style in gradient_method_styles.items():
+def plot_convergence(X: NDArray, y: NDArray, max_iter: int = 6000) -> Figure:
+    fig, ax = plt.subplots(figsize=COLUMN)
+    methods: list[Literal["analytical", "autodiff"]] = ["analytical", "autodiff"]
+    for lam, color, name in ((0.0, COLORS["ols"], "OLS"), (C.GD_LAMBDA, COLORS["ridge"], "Ridge")):
+        L = float(hessian_max_eigenvalue(X, lam=lam))
+        theta_star = Ridge(lam=lam).fit(X, y).coef_
+        J_star = float(cost(X, y, theta_star, lam))
+        for method, ls, lw in zip(methods, ("-", "--"), (2.2, 0.9), strict=True):
             gd = GradientDescent(
-                learning_rate=learning_rate,
+                learning_rate=1 / L,
                 lam=lam,
                 max_iter=max_iter,
-                gradient_method=gradient_method,
-                fit_intercept_column=True,
-            ).fit(X_train, y_train)
+                tol=0.0,
+                gradient_method=method,
+            ).fit(X, y)
+            gap = (gd.cost_history_ - J_star) / J_star
+            lab = f"{name}, {method}" + (
+                rf" ($\lambda=10^{{{int(np.log10(lam))}}}$)" if lam else ""
+            )
             ax.plot(
                 np.arange(1, gd.n_iter_ + 1),
-                gd.cost_history_,
-                label=f"{gradient_method} ({gd.n_iter_} iters)",
-                **style,
+                np.maximum(gap, 1e-16),
+                ls=ls,
+                lw=lw,
+                color=color,
+                alpha=0.6 if ls == "-" else 1.0,
+                label=lab,
             )
-
-        ax.axhline(closed_form_cost, color="black", ls="--", lw=1, label="closed-form")
-        ax.set_yscale("log")
-        ax.set_xlabel("Iteration")
-        ax.set_ylabel("Cost")
-        ax.set_title(rf"{label} ($\gamma={safety_factor:g}\times 2/\lambda_{{max}}(H)$)")
-        ax.legend(fontsize="small")
-
-    fig.suptitle("Plain gradient descent: convergence to the closed-form solution")
-    fig.tight_layout()
+    ax.set_yscale("log")
+    ax.set_xlabel("Iteration $k$")
+    ax.set_ylabel(r"$(C(\theta_k)-C(\hat\theta))/C(\hat\theta)$")
+    ax.legend(loc="upper right")
     return fig
 
 
-def plot_stability_sweep(
-    X_train: NDArray[np.float64],
-    y_train: NDArray[np.float64],
-    lambdas: dict[str, float],
-    max_iter: int,
-    ratios: NDArray[np.float64],
-) -> Figure:
-    """Final cost after max_iter plain-GD steps vs. learning rate, as a fraction of
-    the theoretical stability boundary gamma_max = 2 / hessian_max_eigenvalue(...).
-    """
-    fig, axes = plt.subplots(1, len(lambdas), figsize=FIGSIZE_WIDE, sharey=True)
-
-    for ax, (label, lam) in zip(axes, lambdas.items(), strict=True):
-        gamma_max = 2 / hessian_max_eigenvalue(X_train, lam=lam, fit_intercept_column=True)
-
-        closed_form = Ridge(lam=lam, fit_intercept_column=True).fit(X_train, y_train)
-        closed_form_cost = cost(X_train, y_train, closed_form.coef_, lam, fit_intercept_column=True)
-
-        final_costs = []
-        # Beyond gamma_max the iterates blow up geometrically, reaching values from
-        # merely huge to inf/nan within max_iter steps depending on how far past
-        # the boundary ratio is; that's the point being demonstrated, but
-        # matplotlib's log-scale tick formatter can't handle inf, so clip
-        # everything to a fixed ceiling for display (errstate silences the
-        # resulting overflow warnings).
+def plot_stability(X: NDArray, y: NDArray, n_steps: int = 2000) -> Figure:
+    ratios = np.linspace(0.05, 1.3, 26)
+    fig, ax = plt.subplots(figsize=COLUMN)
+    for lam, color, name in ((0.0, COLORS["ols"], "OLS"), (C.GD_LAMBDA, COLORS["ridge"], "Ridge")):
+        gamma_max = 2 / float(hessian_max_eigenvalue(X, lam=lam))
+        theta_star = Ridge(lam=lam).fit(X, y).coef_
+        J_star = float(cost(X, y, theta_star, lam))
+        gaps = []
         with np.errstate(over="ignore", invalid="ignore"):
-            for ratio in ratios:
+            for r in ratios:
                 gd = GradientDescent(
-                    learning_rate=ratio * gamma_max,
+                    learning_rate=r * gamma_max,
                     lam=lam,
-                    max_iter=max_iter,
-                    tol=0.0,  # never stop early: compare the same fixed step budget
-                    fit_intercept_column=True,
-                ).fit(X_train, y_train)
-                final_costs.append(gd.cost_history_[-1])
-        cost_ceiling = max(closed_form_cost * 1e10, 1e10)
-        final_costs = np.nan_to_num(final_costs, nan=cost_ceiling, posinf=cost_ceiling)
-        final_costs = np.clip(final_costs, None, cost_ceiling)
-
-        ax.plot(ratios, final_costs, marker="o", markersize=3)
-        ax.axhline(closed_form_cost, color="black", ls="--", lw=1, label="closed-form")
-        ax.axvline(1.0, color="tab:red", ls=":", lw=1, label=r"$\gamma = 2/\lambda_{max}(H)$")
-        ax.set_yscale("log")
-        ax.set_xlabel(r"$\gamma \,/\, \gamma_{max}$")
-        ax.set_title(label)
-        ax.legend(fontsize="small")
-
-    axes[0].set_ylabel(f"Cost after {max_iter} steps")
-    fig.suptitle("Gradient descent stability vs. learning rate")
-    fig.tight_layout()
+                    max_iter=n_steps,
+                    tol=0.0,
+                ).fit(X, y)
+                gaps.append((gd.cost_history_[-1] - J_star) / J_star)
+        gaps_arr = np.clip(np.nan_to_num(np.asarray(gaps), nan=1e12, posinf=1e12), 1e-16, 1e12)
+        ax.plot(ratios, gaps_arr, "o-", color=color, label=name)
+    ax.axvline(1.0, color="black", ls=":", lw=0.8)
+    ax.text(0.97, 1e8, r"$\gamma = 2/\lambda_{\max}(\mathbf{H})$", fontsize=7, ha="right")
+    ax.set_yscale("log")
+    ax.set_xlabel(r"$\gamma\,/\,(2/\lambda_{\max}(\mathbf{H}))$")
+    ax.set_ylabel(f"Relative cost gap after {n_steps} steps")
+    ax.legend(loc="lower left")
     return fig
+
+
+def plot_lr_sensitivity(e4: dict) -> Figure:
+    keys = [
+        ("deg5_lam0", "(a) OLS, $p=5$"),
+        (
+            f"deg10_lam{C.GD_LAMBDA:g}",
+            rf"(b) Ridge, $p=10$, $\lambda=10^{{{int(np.log10(C.GD_LAMBDA))}}}$",
+        ),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=WIDE, sharey=True)
+    for ax, (key, title) in zip(axes, keys, strict=True):
+        s = e4["summary"][key]
+        for opt in OPTIMIZERS:
+            rs = sorted(
+                (
+                    r
+                    for r in e4["runs"]
+                    if r["degree"] == s["degree"]
+                    and r["lambda"] == s["lambda"]
+                    and r["optimizer"] == opt
+                ),
+                key=lambda r: r["learning_rate"],
+            )
+            lr = np.array([r["learning_rate"] for r in rs])
+            it = np.array(
+                [r["iters_param"] if r["iters_param"] is not None else np.nan for r in rs],
+                dtype=float,
+            )
+            ax.plot(lr, it, "o-", color=COLORS[opt], label=LABELS[opt])
+        ax.axvline(s["hessian"]["2/L"], color="black", ls=":", lw=0.8)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel(r"Learning rate $\gamma$")
+        ax.set_title(title, loc="left")
+    axes[0].set_ylabel(rf"Iterations to $\|\theta-\hat\theta\|/\|\hat\theta\|<{C.GD_PARAM_TOL:g}$")
+    axes[0].legend(loc="lower left", ncol=2)
+    return fig
+
+
+def _sci(v: float) -> str:
+    mantissa, exponent = f"{v:.1e}".split("e")
+    return rf"${mantissa}\times10^{{{int(exponent)}}}$"
+
+
+def optimizer_table(e4: dict) -> str:
+    rows = []
+    for d, lam in C.GD_BENCH_PROBLEMS:
+        s = e4["summary"][f"deg{d}_lam{lam:g}"]
+        best = min((s[o]["iters"] for o in OPTIMIZERS if s[o]["iters"] is not None), default=None)
+        cells = []
+        for o in OPTIMIZERS:
+            v = s[o]
+            if v["iters"] is None:
+                cells.append(rf"--\,\scriptsize{{[{v['final_param_err']:.2f}]}}")
+                continue
+            c = str(v["iters"])
+            if v["iters"] == best:
+                c = rf"\textbf{{{c}}}"
+            cells.append(c + rf"\,\scriptsize{{({v['n_lr_converged']})}}")
+        model = "OLS" if lam == 0 else r"Ridge"
+        rows.append(
+            f"{d} & {model} & {_sci(s['hessian']['kappa'])} & " + " & ".join(cells) + r" \\"
+        )
+    header = " & ".join(["$p$", "model", r"$\kappa(\bm{H})$"] + [LABELS[o] for o in OPTIMIZERS])
+    return "\n".join(
+        [
+            r"\begin{tabular}{@{}llr" + "r" * len(OPTIMIZERS) + "@{}}",
+            r"\toprule",
+            header + r" \\",
+            r"\midrule",
+            *rows,
+            r"\bottomrule",
+            r"\end{tabular}",
+            "",
+        ]
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--degree", type=int, default=8, help="polynomial degree")
-    parser.add_argument("--n", type=int, default=200, help="number of sample points")
-    parser.add_argument("--noise", type=float, default=0.1, help="Gaussian noise std")
-    parser.add_argument("--seed", type=int, default=42, help="RNG / train-test-split seed")
-    parser.add_argument("--test-size", type=float, default=0.2, help="held-out test fraction")
-    parser.add_argument("--lam", type=float, default=0.01, help="Ridge penalty strength")
-    parser.add_argument("--max-iter", type=int, default=2000, help="gradient steps per fit")
-    parser.add_argument(
-        "--out-subdir", default="gradient_descent", help="subdirectory under docs/figures/"
-    )
-    args = parser.parse_args()
-
     set_style()
-
-    x, y = generate_runge_data(n=args.n, noise_std=args.noise, seed=args.seed)
-    X_full = univariate_polynomial_design_matrix(x=x, degree=args.degree)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_full, y, test_size=args.test_size, random_state=args.seed
-    )
-    X_train_s, _ = _standardize(X_train, X_test)
-
-    lambdas = {"OLS": 0.0, "Ridge": args.lam}
-
-    convergence_fig = plot_convergence(
-        X_train_s, y_train, lambdas, max_iter=args.max_iter, safety_factor=0.9
-    )
-    print(f"Wrote {save_figure(convergence_fig, 'gd_convergence', args.out_subdir)}")
-
-    ratios = np.linspace(0.1, 1.5, 25)
-    stability_fig = plot_stability_sweep(
-        X_train_s, y_train, lambdas, max_iter=args.max_iter, ratios=ratios
-    )
-    print(f"Wrote {save_figure(stability_fig, 'gd_stability_sweep', args.out_subdir)}")
+    X, y = _problem()
+    print(save_figure(plot_convergence(X, y), "gd_convergence", "gradient_descent"))
+    print(save_figure(plot_stability(X, y), "gd_stability_sweep", "gradient_descent"))
+    e4 = load_result("e4_optimizers")
+    print(save_figure(plot_lr_sensitivity(e4), "optimizer_lr_sensitivity", "gradient_descent"))
+    print(write_table("optimizers", optimizer_table(e4)))
 
 
 if __name__ == "__main__":

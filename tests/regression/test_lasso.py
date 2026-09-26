@@ -26,23 +26,19 @@ def test_larger_lambda_increases_sparsity() -> None:
     assert np.linalg.norm(large_lam.coef_) < np.linalg.norm(small_lam.coef_)
 
 
-def test_fit_intercept_column_is_not_penalized() -> None:
+def test_intercept_is_never_penalized() -> None:
     rng = np.random.default_rng(1)
     x = rng.normal(size=100)
-    X = np.column_stack([np.ones_like(x), x])
+    X = x.reshape(-1, 1)
     y = 5.0 + 2.0 * x
 
-    model = Lasso(
-        learning_rate=0.1, lam=0.1, max_iter=5000, optimizer="adam", fit_intercept_column=True
-    ).fit(X, y)
+    model = Lasso(learning_rate=0.1, lam=0.1, max_iter=5000, optimizer="adam").fit(X, y)
 
     # a large penalty should still leave the (unpenalized) intercept close to
     # the true value while driving the (penalized) slope toward zero.
-    unpenalized = Lasso(
-        learning_rate=0.1, lam=1e3, max_iter=5000, optimizer="adam", fit_intercept_column=True
-    ).fit(X, y)
-    assert unpenalized.coef_[0] == pytest.approx(5.0, abs=0.5)
-    assert abs(unpenalized.coef_[1]) < abs(model.coef_[1])
+    unpenalized = Lasso(learning_rate=0.1, lam=1e3, max_iter=5000, optimizer="adam").fit(X, y)
+    assert unpenalized.intercept_ == pytest.approx(y.mean())
+    assert abs(unpenalized.coef_[0]) < abs(model.coef_[0])
 
 
 def test_predict_matches_design_matrix_times_coef() -> None:
@@ -53,7 +49,7 @@ def test_predict_matches_design_matrix_times_coef() -> None:
     model = Lasso(learning_rate=0.05, lam=0.1, max_iter=200).fit(X, y)
     y_pred = model.predict(X)
 
-    np.testing.assert_allclose(y_pred, X @ model.coef_)
+    np.testing.assert_allclose(y_pred, X @ model.coef_ + model.intercept_)
 
 
 def test_rejects_negative_lambda() -> None:
@@ -87,11 +83,11 @@ def test_clone_round_trips_without_penalty_kwarg() -> None:
 
 def test_matches_sklearn_lasso_with_alpha_conversion() -> None:
     # Careful with conventions (per the issue): our lam and sklearn's alpha
-    # relate by lam = 2*alpha (see sklearn_alpha_to_lam's docstring). No bias
-    # term on either side: our Lasso fits with fit_intercept_column=False
-    # (the default) on a pre-centered y, matching sklearn's fit_intercept=False
-    # on that same centered y, rather than either side fitting its own
-    # intercept.
+    # relate by lam = 2*alpha (see sklearn_alpha_to_lam's docstring). y is
+    # pre-centered here so that sklearn's fit_intercept=False (no bias term
+    # of its own) matches what our Lasso does internally (see
+    # regression.base.LinearModel) -- both sides then fit the same
+    # zero-intercept problem, so their coefficients are directly comparable.
     rng = np.random.default_rng(3)
     X = rng.normal(size=(300, 4))
     true_theta = np.array([1.5, 0.0, -0.8, 0.0])

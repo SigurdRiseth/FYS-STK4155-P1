@@ -1,17 +1,23 @@
 """
-Generate report figures for the stochastic gradient descent experiment (part
-H): how mini-batch size trades off against computational cost (Section 4.7 of
-the lecture notes), and a with-vs-without-SGD head-to-head on final accuracy
-(relative to the OLS/Ridge closed-form solutions of parts A/B) and
-computational cost (FLOPs and wall-clock time).
+Report figures for part h) (stochastic gradient descent), OLS and Ridge at
+GD_DEGREE on the reference training split:
 
-Usage:
-    uv run python scripts/generate_sgd_figures.py [--degree 8] [--n 200]
-        [--noise 0.1] [--seed 42] [--lam 0.01] [--n-epochs 500]
-        [--out-subdir sgd]
+* relative cost gap vs. computational cost (FLOPs of the gradient
+  evaluations) for several mini-batch sizes, plain SGD and Adam;
+* a table of final accuracy, FLOPs and wall-clock time with and without
+  mini-batches.
+
+Learning rates: 1/L for plain (S)GD and 0.03 for Adam (the best fixed rate in
+the e4 benchmark), both with the time-based decay eta_t = eta_0/(1 + 1e-3 t)
+in SGD mode. All other settings from utils/config.py.
+
+Usage: uv run python scripts/generate_sgd_figures.py
+
+LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
+wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
+TODO(author): describe your review/changes.
 """
 
-import argparse
 import time
 from typing import Any, Literal
 
@@ -19,154 +25,141 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from utils.plotting import FIGSIZE_WIDE, save_figure, set_style
+from utils import config as C
+from utils.common import data, design, write_table
+from utils.plotting import WIDE, save_figure, set_style
 
-from fys_stk4155_p1.data.design_matrix import univariate_polynomial_design_matrix
-from fys_stk4155_p1.data.runge import generate_runge_data
 from fys_stk4155_p1.regression.cost import cost, hessian_max_eigenvalue
 from fys_stk4155_p1.regression.gradient_descent import GradientDescent
 from fys_stk4155_p1.regression.ridge import Ridge
 
+ADAM_LR = 0.03
+LR_DECAY = 1e-3
 
-def _standardize(
-    X_train: NDArray[np.float64], X_test: NDArray[np.float64]
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Scale non-intercept columns (fit on train only); leave column 0 untouched."""
-    scaler = StandardScaler()
-    X_train_s = np.column_stack([X_train[:, :1], scaler.fit_transform(X_train[:, 1:])])
-    X_test_s = np.column_stack([X_test[:, :1], scaler.transform(X_test[:, 1:])])
-    return X_train_s, X_test_s
+OptName = Literal["plain", "adam"]
+_OPT_NAMES: tuple[OptName, OptName] = ("plain", "adam")
 
 
-def plot_batch_size_sweep(
-    X_train: NDArray[np.float64],
-    y_train: NDArray[np.float64],
-    batch_sizes: list[int],
-    n_epochs: int,
-) -> Figure:
-    """Cost vs. cumulative FLOPs, one line per mini-batch size, for plain and Adam.
-
-    Epoch count alone isn't a fair x-axis across batch sizes (a smaller batch
-    means more, cheaper updates per epoch); cumulative FLOPs
-    (`GradientDescent.cost_flops_`) is, regardless of batch size.
-    """
-    gamma_max = 2 / hessian_max_eigenvalue(X_train, lam=0.0, fit_intercept_column=True)
-    closed_form = Ridge(lam=0.0, fit_intercept_column=True).fit(X_train, y_train)
-    closed_form_cost = cost(X_train, y_train, closed_form.coef_, lam=0.0, fit_intercept_column=True)
-
-    optimizers: list[Literal["plain", "adam"]] = ["plain", "adam"]
-    fig, axes = plt.subplots(1, 2, figsize=FIGSIZE_WIDE, sharey=True)
-    for ax, optimizer in zip(axes, optimizers, strict=True):
-        for batch_size in batch_sizes:
-            gd = GradientDescent(
-                learning_rate=0.9 * gamma_max,
-                lam=0.0,
-                optimizer=optimizer,
-                batch_size=batch_size,
-                n_epochs=n_epochs,
-                learning_rate_schedule="time_based",
-                lr_decay=0.02,
-                fit_intercept_column=True,
-                random_state=0,
-            ).fit(X_train, y_train)
-            ax.plot(gd.cost_flops_, gd.cost_history_, label=f"batch={batch_size}")
-
-        ax.axhline(closed_form_cost, color="black", ls=":", lw=1, label="closed-form")
-        ax.set_yscale("log")
-        ax.set_xlabel("cumulative FLOPs")
-        ax.set_title(optimizer)
-        ax.legend(fontsize="small")
-
-    axes[0].set_ylabel("Cost")
-    fig.suptitle("SGD: cost vs. computational cost, by mini-batch size (OLS, degree 8)")
-    fig.tight_layout()
-    return fig
+def _problem() -> tuple[NDArray, NDArray]:
+    _, _, x_tr, _, y_tr, _ = data()
+    (X,) = design(x_tr, C.GD_DEGREE)
+    # cost() never centers y itself; GradientDescent/Ridge do it internally
+    # (see regression.base.LinearModel), so pre-centering here keeps the two
+    # consistent.
+    return X, y_tr - y_tr.mean()
 
 
-def plot_with_vs_without_sgd(
-    X_train: NDArray[np.float64],
-    y_train: NDArray[np.float64],
-    lambdas: dict[str, float],
-    n_epochs: int,
-) -> Figure:
-    """Final cost (relative to closed-form) vs. wall-clock time, full-batch vs. SGD."""
-    configs: list[tuple[str, dict[str, Any]]] = [
-        ("full-batch, plain", {"optimizer": "plain", "max_iter": n_epochs, "tol": 0.0}),
-        ("full-batch, adam", {"optimizer": "adam", "max_iter": n_epochs, "tol": 0.0}),
-        (
-            "SGD, adam, batch=8",
-            {
-                "optimizer": "adam",
-                "batch_size": 8,
-                "n_epochs": n_epochs,
-                "learning_rate_schedule": "time_based",
-                "lr_decay": 0.02,
-                "random_state": 0,
-            },
-        ),
-    ]
+def _lr(X: NDArray, optimizer: str, lam: float) -> float:
+    if optimizer == "adam":
+        return ADAM_LR
+    return 1.0 / float(hessian_max_eigenvalue(X, lam=lam))
 
-    fig, axes = plt.subplots(1, len(lambdas), figsize=FIGSIZE_WIDE, sharey=True)
-    for ax, (label, lam) in zip(axes, lambdas.items(), strict=True):
-        gamma_max = 2 / hessian_max_eigenvalue(X_train, lam=lam, fit_intercept_column=True)
-        closed_form = Ridge(lam=lam, fit_intercept_column=True).fit(X_train, y_train)
-        closed_form_cost = cost(X_train, y_train, closed_form.coef_, lam, fit_intercept_column=True)
 
-        for name, kwargs in configs:
-            start = time.perf_counter()
-            gd = GradientDescent(
-                learning_rate=0.9 * gamma_max, lam=lam, fit_intercept_column=True, **kwargs
-            ).fit(X_train, y_train)
-            elapsed_ms = (time.perf_counter() - start) * 1000
-            ratio = gd.cost_history_[-1] / closed_form_cost
-            ax.scatter([elapsed_ms], [ratio], label=name, s=40)
+def _gap(X: NDArray, y: NDArray, lam: float) -> Any:
+    theta_star = Ridge(lam=lam).fit(X, y).coef_
+    J_star = float(cost(X, y, theta_star, lam))
+    return lambda history: (np.asarray(history) - J_star) / J_star
 
-        ax.axhline(1.0, color="black", ls=":", lw=1)
-        ax.set_yscale("log")
+
+def plot_batch_size_sweep(X: NDArray, y: NDArray) -> Figure:
+    gap = _gap(X, y, 0.0)
+    fig, axes = plt.subplots(1, 2, figsize=WIDE, sharey=True)
+    cmap = plt.get_cmap("viridis")
+    for ax, opt, title in zip(axes, _OPT_NAMES, ("(a) plain SGD", "(b) Adam"), strict=True):
+        for i, b in enumerate(C.SGD_BATCH_SIZES):
+            full = b >= X.shape[0]
+            kwargs: dict[str, Any] = (
+                {"max_iter": C.SGD_EPOCHS, "tol": 0.0}
+                if full
+                else {
+                    "batch_size": b,
+                    "n_epochs": C.SGD_EPOCHS,
+                    "random_state": 0,
+                    "learning_rate_schedule": "time_based",
+                    "lr_decay": LR_DECAY,
+                }
+            )
+            gd = GradientDescent(learning_rate=_lr(X, opt, 0.0), optimizer=opt, **kwargs).fit(X, y)
+            ax.plot(
+                gd.cost_flops_,
+                np.maximum(gap(gd.cost_history_), 1e-16),
+                color=cmap(i / (len(C.SGD_BATCH_SIZES) - 1)),
+                label=f"full batch ({b})" if full else f"batch {b}",
+            )
         ax.set_xscale("log")
-        ax.set_xlabel("wall-clock time (ms)")
-        ax.set_title(label)
-        ax.legend(fontsize="small")
-
-    axes[0].set_ylabel("final cost / closed-form")
-    fig.suptitle("With vs. without SGD: accuracy vs. wall-clock cost")
-    fig.tight_layout()
+        ax.set_yscale("log")
+        ax.set_xlabel("Cumulative FLOPs of gradient evaluations")
+        ax.set_title(title, loc="left")
+    axes[0].set_ylabel("Relative cost gap (OLS)")
+    axes[1].legend(loc="lower left")
     return fig
+
+
+def _sci(v: float) -> str:
+    mantissa, exponent = f"{v:.1e}".split("e")
+    return rf"${mantissa}\times10^{{{int(exponent)}}}$"
+
+
+def sgd_table(X: NDArray, y: NDArray, batch: int = 16, repeats: int = 3) -> str:
+    """Final relative cost gap, FLOPs and wall-clock time after SGD_EPOCHS
+    epochs, with and without mini-batches (median time over `repeats` runs)."""
+    rows = []
+    for name, lam in (("OLS", 0.0), ("Ridge", C.GD_LAMBDA)):
+        gap = _gap(X, y, lam)
+        for opt, label in zip(_OPT_NAMES, ("plain", "Adam"), strict=True):
+            for b in (None, batch):
+                kwargs: dict[str, Any] = (
+                    {"max_iter": C.SGD_EPOCHS, "tol": 0.0}
+                    if b is None
+                    else {
+                        "batch_size": b,
+                        "n_epochs": C.SGD_EPOCHS,
+                        "random_state": 0,
+                        "learning_rate_schedule": "time_based",
+                        "lr_decay": LR_DECAY,
+                    }
+                )
+                times = []
+                for _ in range(repeats):
+                    t0 = time.perf_counter()
+                    gd = GradientDescent(
+                        learning_rate=_lr(X, opt, lam),
+                        lam=lam,
+                        optimizer=opt,
+                        **kwargs,
+                    ).fit(X, y)
+                    times.append((time.perf_counter() - t0) * 1e3)
+                g = float(gap(gd.cost_history_)[-1])
+                g_txt = (
+                    r"$<10^{-15}$"
+                    if g < 1e-15
+                    else f"${g:.1e}$".replace("e-0", r"\times10^{-").replace("e-", r"\times10^{-")
+                )
+                if "times10" in g_txt:
+                    g_txt = g_txt[:-1] + "}$"
+                rows.append(
+                    f"{name} & {label} & {'full' if b is None else b} & {gd.n_updates_} & "
+                    f"{_sci(gd.cost_flops_[-1])} & {g_txt} & {np.median(times):.0f}" + r" \\"
+                )
+    return "\n".join(
+        [
+            r"\begin{tabular}{@{}lllrrrr@{}}",
+            r"\toprule",
+            r"model & optimizer & batch & updates & FLOPs & rel.\ gap & ms \\",
+            r"\midrule",
+            *rows,
+            r"\bottomrule",
+            r"\end{tabular}",
+            "",
+        ]
+    )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--degree", type=int, default=8, help="polynomial degree")
-    parser.add_argument("--n", type=int, default=200, help="number of sample points")
-    parser.add_argument("--noise", type=float, default=0.1, help="Gaussian noise std")
-    parser.add_argument("--seed", type=int, default=42, help="RNG / train-test-split seed")
-    parser.add_argument("--test-size", type=float, default=0.2, help="held-out test fraction")
-    parser.add_argument("--lam", type=float, default=0.01, help="Ridge penalty strength")
-    parser.add_argument(
-        "--n-epochs", type=int, default=500, help="epochs / full-batch iterations per fit"
-    )
-    parser.add_argument("--out-subdir", default="sgd", help="subdirectory under docs/figures/")
-    args = parser.parse_args()
-
     set_style()
-
-    x, y = generate_runge_data(n=args.n, noise_std=args.noise, seed=args.seed)
-    X_full = univariate_polynomial_design_matrix(x=x, degree=args.degree)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_full, y, test_size=args.test_size, random_state=args.seed
-    )
-    X_train, _ = _standardize(X_train, X_test)
-
-    lambdas = {"OLS": 0.0, "Ridge": args.lam}
-
-    batch_sizes = [8, 32, 128, X_train.shape[0]]
-    batch_fig = plot_batch_size_sweep(X_train, y_train, batch_sizes, n_epochs=args.n_epochs)
-    print(f"Wrote {save_figure(batch_fig, 'sgd_batch_size_sweep', args.out_subdir)}")
-
-    cost_fig = plot_with_vs_without_sgd(X_train, y_train, lambdas, n_epochs=args.n_epochs)
-    print(f"Wrote {save_figure(cost_fig, 'sgd_with_vs_without', args.out_subdir)}")
+    X, y = _problem()
+    print(save_figure(plot_batch_size_sweep(X, y), "sgd_batch_size_sweep", "sgd"))
+    print(write_table("sgd", sgd_table(X, y)))
 
 
 if __name__ == "__main__":

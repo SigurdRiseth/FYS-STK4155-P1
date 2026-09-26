@@ -1,5 +1,6 @@
 import numpy as np
 
+from fys_stk4155_p1.regression.ordinary_least_squares import OLS
 from fys_stk4155_p1.regression.shrinkage import (
     lasso_coefficient_path,
     ridge_coefficient_path,
@@ -16,7 +17,7 @@ def test_ridge_coefficient_path_shape_and_lambda0_matches_ols() -> None:
     path = ridge_coefficient_path(X, y, lambdas)
 
     assert path.shape == (3, 4)
-    theta_ols = np.linalg.lstsq(X, y, rcond=None)[0]
+    theta_ols = OLS().fit(X, y).coef_
     np.testing.assert_allclose(path[0], theta_ols, atol=1e-8)
 
 

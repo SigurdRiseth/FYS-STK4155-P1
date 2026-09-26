@@ -230,7 +230,9 @@ def test_penalty_l1_uses_lasso_cost_for_history() -> None:
 
     model = GradientDescent(learning_rate=0.05, lam=0.3, max_iter=50, penalty="l1").fit(X, y)
 
-    expected_final_cost = lasso_cost(X, y, model.coef_, lam=0.3)
+    # cost_history_ is computed internally on the mean-centered target (see
+    # regression.base.LinearModel), so the reference value must be too.
+    expected_final_cost = lasso_cost(X, y - y.mean(), model.coef_, lam=0.3)
     assert model.cost_history_[-1] == pytest.approx(expected_final_cost)
 
 

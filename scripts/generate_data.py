@@ -1,7 +1,11 @@
 """
-Generate the Franke-function dataset used for OLS/Ridge/LASSO experiments.
+Generate the reference Runge-function data set (settings from utils/config.py).
 
-Usage: uv run python scripts/generate_data.py [--n 100] [--noise 0.1] [--seed 42]
+Usage: uv run python scripts/generate_data.py [--pdf]
+
+LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
+wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
+TODO(author): describe your review/changes.
 """
 
 import argparse
@@ -10,7 +14,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.typing import NDArray
-from utils.plotting import save_figure, set_style
+from utils import config as C
+from utils.plotting import COLORS, save_figure, set_style
 
 from fys_stk4155_p1.data.runge import generate_runge_data, runge_function
 
@@ -24,24 +29,11 @@ def _save_runge_data_figure(x: NDArray[np.float64], y: NDArray[np.float64], nois
     x_plot = np.linspace(-1, 1, 500)
 
     fig, ax = plt.subplots()
-    ax.plot(
-        x_plot,
-        runge_function(x_plot),
-        color="black",
-        lw=1.5,
-        label="Runge's function",
-    )
-    ax.scatter(
-        x,
-        y,
-        s=15,
-        alpha=0.6,
-        label=rf"data, $\sigma = {noise}$",
-    )
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_title("Runge function: noisy samples vs. ground truth")
-    ax.legend()
+    ax.plot(x_plot, runge_function(x_plot), color="black", lw=1.2, label=r"$f(x)=1/(1+25x^2)$")
+    ax.scatter(x, y, s=6, alpha=0.7, color=COLORS["ols"], lw=0, label=rf"data ($\sigma = {noise}$)")
+    ax.set_xlabel("$x$")
+    ax.set_ylabel("$y$")
+    ax.legend(loc="upper left")
 
     path = save_figure(fig, "runge_data", subdir="data")
     plt.close(fig)
@@ -50,9 +42,9 @@ def _save_runge_data_figure(x: NDArray[np.float64], y: NDArray[np.float64], nois
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--n", type=int, default=100, help="number of sample points")
-    parser.add_argument("--noise", type=float, default=0.1, help="Gaussian noise std")
-    parser.add_argument("--seed", type=int, default=42, help="RNG seed")
+    parser.add_argument("--n", type=int, default=C.N, help="number of sample points")
+    parser.add_argument("--noise", type=float, default=C.NOISE, help="Gaussian noise std")
+    parser.add_argument("--seed", type=int, default=C.SEED, help="RNG seed")
     parser.add_argument("--out", type=Path, default=DATA_DIR / "runge.npz")
     parser.add_argument("--pdf", action="store_true", help="save a PDF figure to docs/figures/data")
     args = parser.parse_args()

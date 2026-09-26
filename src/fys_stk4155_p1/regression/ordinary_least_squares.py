@@ -1,7 +1,5 @@
 """Ordinary least squares regression."""
 
-from typing import Self
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -12,7 +10,9 @@ class OLS(LinearModel):
     """Ordinary least squares via the SVD-based pseudoinverse.
 
     Solves min_theta ||X @ theta - y||_2^2 using the SVD-based pseudoinverse,
-    which is stable for rank-deficient or ill-conditioned X.
+    which is stable for rank-deficient or ill-conditioned X. Fits no
+    intercept column; `LinearModel.fit` centers `y` before calling
+    `_fit_centered`, and `intercept_` is added back at `predict`.
 
     Args:
         rcond: Singular values below rcond * max(s) are treated as zero.
@@ -30,18 +30,16 @@ class OLS(LinearModel):
     def __init__(self, rcond: float | None = None) -> None:
         self.rcond = rcond
 
-    def fit(self, X: NDArray[np.float64], y: NDArray[np.float64]) -> Self:
-        """Fit theta by least squares.
+    def _fit_centered(self, X: NDArray[np.float64], y_centered: NDArray[np.float64]) -> None:
+        """Fit theta by least squares against the centered target.
 
         Args:
             X: Design matrix, shape (n_samples, n_features).
-            y: Targets, shape (n_samples,).
+            y_centered: Mean-centered targets, shape (n_samples,).
 
-        Returns:
-            self, with coef_ set to the fitted coefficients, shape (n_features,).
+        Sets:
+            coef_: The fitted coefficients, shape (n_features,).
         """
-        X, y = self._validate_inputs(X, y)
-
         U, s, Vt = np.linalg.svd(X, full_matrices=False)
 
         rcond = self.rcond
@@ -53,5 +51,4 @@ class OLS(LinearModel):
         cutoff = rcond * s[0] if s.size else 0.0
         s_inv = np.where(s > cutoff, 1.0 / s, 0.0)
 
-        self.coef_ = Vt.T @ (s_inv * (U.T @ y))
-        return self
+        self.coef_ = Vt.T @ (s_inv * (U.T @ y_centered))
