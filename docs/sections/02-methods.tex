@@ -59,7 +59,7 @@ $\bm{X}$ has full column rank, the normal equations have the unique solution
 If $\bm{X}$ is rank-deficient, $\bm{X}^\top\bm{X}$ is singular and the OLS
 minimizer is not unique~\cite{mehta_2019}. In this case, the Moore--Penrose pseudoinverse gives
 the minimum-norm OLS solution,
-\begin{equation}
+\begin{equation}\label{eq:ols-pseudoinverse}
     \hat{\bm{\theta}}_\text{OLS}
     = \bm{X}^{+}\bm{y}
     = \bm{V\Sigma}^{+}\bm{U}^\top,
@@ -232,7 +232,7 @@ where $\tilde{\bm{y}}_{i}^{(-i)}$ is the prediction for fold $i$ of the
 model trained without it. We select hyperparameters (the degree $p$ and
 $\lambda$) by minimizing $\mathrm{CV}_k$ over a
 grid~\cite{hjorth-jensen_2026}. Larger $k$ trains on
-more data per fit ($1-1/k$ of it), which reduces the pessimistic bias of the
+more data per fit, which reduces the pessimistic bias of the
 estimate; but the $k$ training sets then overlap more, so the fold errors
 become more correlated and the average has higher
 variance~\cite{hastie_2017}.
@@ -286,12 +286,12 @@ Hessians~\cite{goodfellow_2016,hjorth-jensen_2026}.
 \subsubsection{Adaptive learning rates}
 AdaGrad~\cite{duchi_2011} scales every coordinate by the
 accumulated squared gradients,
-\begin{align}
-    \bm{r}^{(k)} &= \bm{r}^{(k-1)} + \bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+\begin{align}\label{eq:adagrad-iterate}
+    \bm{r}^{(k)} &= \bm{r}^{(k-1)} + \bm{g}^{(k)}\odot\bm{g}^{(k)},\nonumber \\
     \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \frac{\gamma}{\sqrt{\bm{r}^{(k)}}
     + \epsilon}\odot\bm{g}^{(k)},
 \end{align}
-where $\bm{g}^{(k)}$ is the gradient, $\odot$ the elementwise product, and the
+where $\bm{g}^{(k)}$ is the gradient, $\odot$ the Hadamard product, and the
 square root and division are elementwise. The effective step of each coordinate
 decreases monotonically. RMSprop replaces the sum by an exponentially decaying
 average, $\bm{v}^{(k)} = \rho\bm{v}^{(k-1)} + (1-\rho)\,\bm{g}^{(k)}\odot
@@ -299,9 +299,9 @@ average, $\bm{v}^{(k)} = \rho\bm{v}^{(k-1)} + (1-\rho)\,\bm{g}^{(k)}\odot
 Adam~\cite{kingma_2017} combines a decaying average of the
 gradient (momentum) with RMSprop's scaling and corrects both for their
 initialization at zero:
-\begin{align}
-    \bm{m}^{(k)} &= \beta_1\bm{m}^{(k-1)} + (1-\beta_1)\,\bm{g}^{(k)}, \\
-    \bm{v}^{(k)} &= \beta_2\bm{v}^{(k-1)} + (1-\beta_2)\,\bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+\begin{align}\label{eq:adam-iterate}
+    \bm{m}^{(k)} &= \beta_1\bm{m}^{(k-1)} + (1-\beta_1)\,\bm{g}^{(k)},\nonumber \\
+    \bm{v}^{(k)} &= \beta_2\bm{v}^{(k-1)} + (1-\beta_2)\,\bm{g}^{(k)}\odot\bm{g}^{(k)},\nonumber \\
     \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \gamma\,
     \frac{\bm{m}^{(k)}/(1-\beta_1^{k})}{\sqrt{\bm{v}^{(k)}/(1-\beta_2^{k})}+\epsilon}.
 \end{align}
