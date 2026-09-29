@@ -64,6 +64,14 @@ def kfold_mse_degree_sweep(
         with the same `seed` can be compared fold by fold), and
         "mse_train_mean", "mse_train_std" (in-fold training MSE). The "_std"
         entries are the standard deviation of the k per-fold MSEs.
+
+    LLM-assisted
+    ------------
+    Tool: Claude (September 2026)
+    Role: Added the "mse_folds" per-fold array to the returned dict, so that
+        two sweeps with the same seed can be compared fold by fold.
+    Modifications: Verified against cross_validate's own per-fold
+        test_score/train_score output (tests/resampling/test_cross_validation.py).
     """
     degrees_arr = np.array(list(degrees))
     kfold = KFold(n_splits=k, shuffle=True, random_state=seed)

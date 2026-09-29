@@ -21,6 +21,17 @@ class Optimizer(ABC):
 
     Raises:
         ValueError: If `learning_rate` is not strictly positive.
+
+    LLM-assisted
+    ------------
+    Tool: Claude (September 2026)
+    Role: Provided the framework of this base class (the abstract reset/step
+        interface) and the `_check_shapes`/`_init_or_check_state` shape
+        validation helpers shared by the subclasses below.
+    Modifications: Implemented the Plain/Momentum/AdaGrad/RMSProp/Adam update
+        rules ourselves from the course formulas; tested against known-input,
+        one-step values and on a quadratic test problem
+        (tests/optimization/test_optimizers.py).
     """
 
     def __init__(self, learning_rate: float) -> None:

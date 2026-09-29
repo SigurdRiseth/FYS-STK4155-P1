@@ -203,7 +203,18 @@ class GradientDescent(LinearModel):
     def _build_schedule(self) -> Callable[[int], float]:
         """Dispatch `learning_rate_schedule`/`lr_decay` to a `t -> learning_rate`
         callable via `optimization.schedules` (see that module for why this
-        isn't exposed as a constructor param directly)."""
+        isn't exposed as a constructor param directly).
+
+        LLM-assisted
+        ------------
+        Tool: Claude (September 2026)
+        Role: Suggested dispatching to `optimization.schedules` here and
+            updating `opt.learning_rate` per mini-batch in `_fit_minibatch`,
+            rather than exposing a callable `learning_rate_schedule` directly.
+        Modifications: Verified the dispatched values match calling
+            `constant_schedule`/`time_based_decay`/`exponential_decay`
+            directly (tests/regression/test_gradient_descent.py).
+        """
         if self.learning_rate_schedule == "constant":
             return constant_schedule(self.learning_rate)
         if self.learning_rate_schedule == "time_based":

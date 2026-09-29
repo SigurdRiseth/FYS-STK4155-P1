@@ -22,7 +22,7 @@ minimum lies slightly below $\sigma^2$ is not a contradiction: with 20 test
 points the test MSE has a standard error of roughly
 $\sigma^2\sqrt{2/20}\approx0.3\,\sigma^2$, which also makes the location of the
 minimum between $p\approx10$ and $p = 14$ essentially arbitrary. The low $R^2$
-reflects that most of the variance of $y$ in the test set is noise; the negative
+reflects that most of the variance of $\bm{y}$ in the test set is noise; the negative
 $R^2$ at low degree occurs because the 20 test points happen to contain few
 points near the peak, so their variance is small.
 
@@ -294,7 +294,7 @@ to $5\times10^{-16}$ (\cref{subsec:verification}).
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{figures/gradient_descent/gd_convergence.pdf}
-    \caption{Plain gradient descent with $\gamma = 1/L$ at $p=5$ (reference
+    \caption{Plain gradient descent with $\gamma = 1/{\lambda_{\max}}$ at $p=5$ (reference
     training set): relative gap between the cost and the cost of the closed-form
     solution vs.\ iteration, for OLS and Ridge ($\lambda=10^{-3}$), with
     analytical (thick) and JAX (dashed) gradients.}

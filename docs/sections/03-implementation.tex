@@ -118,7 +118,7 @@ results and independent implementations:
     $\theta_j = 0$. At $\theta_j=0$ they differ by exactly $\lambda$ per
     coefficient, since \texttt{numpy.sign(0)}${}=0$ while JAX differentiates $|\theta|$
     to $1$ at the origin.
-    \item \textbf{Gradient descent vs.\ closed form:} with $\gamma=1/L$, plain GD
+    \item \textbf{Gradient descent vs.\ closed form:} with $\gamma=1/\lambda_{\max}$, plain GD
     converges linearly to the closed-form OLS and Ridge solutions
     (\cref{fig:gd_convergence}), and the stability boundary
     \cref{eq:gd_stability} is reproduced (\cref{fig:gd_stability}).

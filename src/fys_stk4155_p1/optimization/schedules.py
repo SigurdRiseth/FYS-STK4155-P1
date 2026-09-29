@@ -3,7 +3,15 @@ Hjorth-Jensen (2026); Géron, Chapter 11). Each factory returns a callable mappi
 a global step count `t` (total mini-batch updates taken so far) to that step's
 learning rate; `regression.gradient_descent.GradientDescent` dispatches to these
 internally via its `learning_rate_schedule`/`lr_decay` parameters rather than
-accepting a callable directly (see that module for why)."""
+accepting a callable directly (see that module for why).
+
+LLM-assisted
+------------
+Tool: Claude (September 2026)
+Role: Wrote the constant/time-based/exponential-decay schedule factories.
+Modifications: Reviewed against Hjorth-Jensen (2026) Section 4.7.1 and Géron
+    Chapter 11; tested in tests/optimization/test_schedules.py.
+"""
 
 from collections.abc import Callable
 
