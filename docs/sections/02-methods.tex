@@ -214,8 +214,11 @@ with replacement, refit the model on each, and predict on a fixed test set. The
 spread of the $B$ predictions estimates $\mathrm{Var}[\tilde{\bm{y}}]$, their
 mean estimates $\mathbb{E}[\tilde{\bm{y}}]$ in \cref{eq:bias-term}, and the
 average squared error estimates the test MSE. A bootstrap sample contains on
-average only a fraction $1-(1-1/n_\text{tr})^{n_\text{tr}} \approx 1 - e^{-1}
-\approx 0.632$ of the distinct training points, so every bootstrap fit is made
+average only a fraction,
+\begin{equation}\label{eq:bootstrap-size}
+    1-(1-1/n_\text{tr})^{n_\text{tr}} \approx 1 - e^{-1} \approx 0.632,
+\end{equation}
+of the distinct training points, so every bootstrap fit is made
 from effectively fewer points than the fit on the full training
 set~\cite{hastie_2017}.
 
@@ -351,10 +354,10 @@ property of the Lasso solution, therefore appear only by coincidence.
 Automatic differentiation (AD) computes derivatives of a function given as a
 program by applying the chain rule to the sequence of elementary operations the
 program executes~\cite{baydin_2018}. It is
-neither symbolic differentiation, which manipulates expressions and can produce
-exponentially large derivative expressions, nor numerical differentiation, whose
+neither symbolic differentiation, which requires the function as a single closed-form
+expression and can suffer from expression swell, nor numerical differentiation, whose
 finite differences carry truncation and round-off errors: AD evaluates the
-derivative exactly up to floating-point round-off, at a specific input. In
+derivative exactly up to floating-point round-off, at a specific input~\cite{hjorth-jensen_2026}. In
 reverse mode, which JAX's \texttt{grad} uses for a scalar cost, the program is
 run forward once while storing intermediate values, and derivatives are then
 propagated backwards; the full gradient costs a small constant multiple of one
