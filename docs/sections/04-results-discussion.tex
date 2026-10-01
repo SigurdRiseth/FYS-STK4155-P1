@@ -331,7 +331,7 @@ rate for two of the problems. Three observations stand out.
 
 First, momentum and Adam are an order of magnitude faster than the other
 update rules. At $p=5$, momentum needs $126$ iterations and Adam $337$, against
-$3166$ for plain GD, a factor of $25$ and $9.4$; AdaGrad and RMSprop are no
+$3166$ for plain GD; AdaGrad and RMSprop are no
 faster than plain GD. For the Ridge problems at $p = 10$ and $15$ the two are
 equally fast within the resolution of the learning-rate grid ($1342$ vs.\
 $1422$ and $1913$ vs.\ $1379$ iterations), about $18$ times faster than plain
@@ -357,7 +357,7 @@ $0.28$ (Adam), and at $p = 15$ none gets below $0.99$, barely closer to
 $\hat{\bm{\theta}}$ than the starting point $\bm{\theta}=\bm{0}$ (error $1$). With $\gamma = 1/\lambda_{\max}$, plain GD
 would need about $\kappa\ln 10^3 \approx 2\times10^7$ iterations at $p=10$. A
 penalty of only $\lambda = 10^{-3}$, which barely changes the fit, reduces
-$\kappa$ to $\sim10^4$ (\cref{subsec:gradient-descent}), and all optimizers
+$\kappa$ to $\sim10^4$, and all optimizers
 converge again. Where they converge, the iteration counts of plain GD scale
 with $\kappa$ as predicted: $3166 \approx 5\kappa$ at $p=5$ and $26244 \approx 4
 \kappa$ for Ridge at $p = 10$. The OLS parameters at high degree are, however,
