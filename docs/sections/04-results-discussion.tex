@@ -21,10 +21,10 @@ flatter right branch than one might expect from Runge's phenomenon. That the
 minimum lies slightly below $\sigma^2$ is not a contradiction: with 20 test
 points the test MSE has a standard error of roughly
 $\sigma^2\sqrt{2/20}\approx0.3\,\sigma^2$, which also makes the location of the
-minimum between $p\approx10$ and $p = 14$ essentially arbitrary. The low $R^2$
-reflects that most of the variance of $y$ in the test set is noise; the negative
-$R^2$ at low degree occurs because the 20 test points happen to contain few
-points near the peak, so their variance is small.
+minimum between $p\approx10$ and $p = 14$ essentially arbitrary. $R^2$ is only
+moderate because much of the variance of $\bm{y}$ in the test set is noise, and
+negative at low degree because the 20 test points happen to contain few points
+near the peak.
 
 \begin{figure}[htbp]
     \centering
@@ -56,20 +56,11 @@ bias--variance analysis below quantifies.
 \end{figure}
 
 With more data, the minimum moves to higher degree and the high-degree
-deterioration disappears (\cref{fig:ols_test_mse_by_n}): for $n = 400$ the test
-MSE is flat at $\approx\sigma^2$ from $p\approx12$ to $20$, whereas for $n=50$
-(with only 10 test points) the curve is erratic beyond $p = 12$ and reaches $3.2$
-at $p=20$. The erratic curves for $n=50$ and $n=200$ are dominated by single
-test points near the ends of the interval, a mechanism we return to in
-\cref{subsec:results-selection}.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\linewidth]{figures/ols/ols_test_mse_by_n.pdf}
-    \caption{OLS test MSE vs.\ degree for $n \in \{50, 100, 200, 400\}$ points
-    ($\sigma=0.1$, 80/20 split, seed 42 for every $n$).}
-    \label{fig:ols_test_mse_by_n}
-\end{figure}
+deterioration disappears (\cref{fig:ols_test_mse_by_n} in
+appendix~\ref{app:additional-results}): for $n = 400$ the test MSE is flat at
+$\approx\sigma^2$ from $p\approx12$ to $20$, whereas for $n=50$ it is erratic
+beyond $p = 12$ and reaches $3.2$ at $p=20$, dominated by single test points
+near the ends of the interval (\cref{subsec:results-selection}).
 
 \subsection{Ridge regression}
 \label{subsec:results-ridge}
@@ -77,13 +68,15 @@ test points near the ends of the interval, a mechanism we return to in
 \Cref{fig:ridge_shrinkage} shows the mechanism of Ridge regression at $p=15$.
 The squared singular values of the standardized design matrix, $\sigma_i^2/n$, span
 ten orders of magnitude, from $9.8$ to $3.8\times10^{-10}$. According to
-\cref{eq:ridge_scaling}, a penalty $\lambda$ suppresses the modes with
-$\sigma_i^2/n \lesssim \lambda$ and leaves the others untouched, so increasing
-$\lambda$ by a decade removes roughly one more mode. $\lambda = 10^{-10}$ is
-essentially OLS; $\lambda = 1$ keeps only the first three modes. The ridge
-trace (\cref{fig:ridge_trace}) shows the corresponding coefficients: the large,
-alternating OLS coefficients collapse between $\lambda\approx10^{-9}$ and
-$10^{-6}$, as the smallest modes are removed.
+\cref{eq:ridge_scaling}, a penalty $\lambda$ halves the mode with
+$\sigma_i^2/n = \lambda$, suppresses modes with $\sigma_i^2/n \ll \lambda$ and
+leaves those with $\sigma_i^2/n \gg \lambda$ nearly untouched. Where the spectrum
+falls by about a decade per mode, each tenfold increase of $\lambda$ therefore
+removes roughly one more mode. $\lambda = 10^{-10}$ is essentially OLS, while at
+$\lambda = 1$ only the two leading modes are largely kept ($d_1=0.91$,
+$d_2=0.79$), the third is halved and the fourth reduced to $0.28$. Accordingly,
+the largest OLS coefficients ($|\hat\theta_j|\sim10^2$) shrink by more than an
+order of magnitude between $\lambda=10^{-10}$ and $10^{-6}$.
 
 \begin{figure}[htbp]
     \centering
@@ -95,14 +88,6 @@ $10^{-6}$, as the smallest modes are removed.
     \label{fig:ridge_shrinkage}
 \end{figure}
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\linewidth]{figures/ridge/ridge_trace_degree15.pdf}
-    \caption{Ridge trace at $p=15$: coefficients $\hat\theta_j(\lambda)$ of the
-    standardized features, colored by the power $j$.}
-    \label{fig:ridge_trace}
-\end{figure}
-
 \Cref{fig:ridge_test_mse} repeats the analysis of \cref{fig:ols_mse_r2_vs_degree}
 for Ridge. A small penalty ($\lambda = 10^{-8}$) reproduces the OLS curve up to
 $p\approx14$ and removes the slight rise beyond it ($0.0096$ instead of $0.0105$
@@ -110,7 +95,7 @@ at $p = 20$); $\lambda = 10^{-6}$ is similar. Larger penalties make the curve
 flat in $p$, because the extra degrees only add modes that the penalty
 suppresses, but at a higher level: $0.013$ for $\lambda = 10^{-4}$ and
 $0.023$ for $\lambda = 10^{-2}$. Here the penalty removes modes that are needed
-to represent the peak of $f$, and the bias dominates. On this data set Ridge
+to represent $f$, and the bias dominates. On this data set Ridge
 therefore makes the choice of degree less critical, but it does not lower the
 best achievable test error; we test this more carefully in
 \cref{subsec:results-selection}.
@@ -132,13 +117,10 @@ training set, evaluated on the fixed test set. At low degree the error is
 dominated by the bias: at $p = 2$ the squared bias against $f$ is $0.032$ and the
 variance $0.002$. Increasing the degree trades bias for variance, and the
 bootstrap test error is smallest at $p = 6$ ($0.021$), where
-$\mathrm{Bias}^2 = 0.009$ and $\mathrm{Var} = 0.006$ are of the same size.
+$\mathrm{Bias}^2 = 0.009$ and $\mathrm{Var} = 0.006$ are of roughly the same size.
 Beyond it the variance explodes, from $0.006$ at $p=6$ to $0.57$ at $p=10$ and
-$15$ at $p = 15$: a factor of $2.6\times10^3$ between $p=6$ and $p=15$. The two
-bias estimates differ by approximately $\sigma^2$, as
-\cref{eq:measured-bias} predicts (e.g.\ $0.015$ against $\bm{y}$ and $0.009$
-against $\bm{f}$ at $p=6$; the difference fluctuates around $\sigma^2 = 0.01$
-since only 20 test points enter the average).
+$15$ at $p = 15$. The two bias estimates differ by approximately $\sigma^2$, as
+\cref{eq:measured-bias} predicts.
 
 \begin{figure}[htbp]
     \centering
@@ -155,7 +137,7 @@ Two features of the figure deserve comment. First, the bootstrap error is
 minimized at $p=6$, whereas the single test split of
 \cref{fig:ols_mse_r2_vs_degree} favors $p = 12$; both use the same training and
 test points. The difference arises because each bootstrap fit sees only about
-$63\%$ of the distinct training points (\cref{subsec:resampling}) and is
+$63\%$ of the distinct training points (\cref{eq:bootstrap-size}) and is
 therefore much less stable at high degree than the fit on all 80 points. The
 bootstrap thus estimates the variance of a model trained on fewer, and
 duplicated, points. Second, the bias is not monotone in $p$ beyond $p\approx8$:
@@ -166,11 +148,9 @@ smooth polynomial fit either. We examine the origin of these wild fits in
 
 The decomposition responds to $n$ and $\sigma$ as expected
 (\cref{fig:bias_variance_by_n,fig:bias_variance_by_noise} in
-appendix~\ref{app:additional-results}). With more data the variance at a given degree
-drops while the bias hardly changes, so the minimum moves from $p = 4$ at $n=50$
-to $6$, $10$ and $12$ at $n=100$, $200$ and $400$. More noise raises the floor
-and the variance, and the optimal degree falls from $6$ ($\sigma \leq 0.2$) to
-$4$ ($\sigma = 0.4$).
+appendix~\ref{app:additional-results}): with more data the variance drops and
+the minimum moves from $p = 4$ at $n=50$ to $p=12$ at $n=400$, while more noise
+moves it from $p=6$ ($\sigma \leq 0.2$) to $p=4$ ($\sigma = 0.4$).
 
 \subsection{Resampling and model selection}
 \label{subsec:results-selection}
@@ -229,7 +209,7 @@ fewer points each fit uses (bootstrap $>$ 5-fold $>$ 10-fold).
 the median selected degree is $8$ for the bootstrap, $10$ for 5-fold and $12$ for
 10-fold CV, and $13$ for the single split, while the degree with the smallest
 true error has median $14$. The selection matters less than the spread
-suggests, because the true error is flat over a wide range of degrees: the mean
+suggests, because the true error is largely flat over a wide range of degrees: the mean
 true error of the model at the selected degree is $0.0179\pm0.0008$ for the
 bootstrap, $0.024\pm0.006$ for 5-fold CV, $0.028\pm0.008$ for 10-fold CV and
 $0.022\pm0.006$ for the single split (mean $\pm$ standard error over the 31 data
@@ -254,11 +234,11 @@ CV selects $p = 8$ with a CV MSE of $0.0285$. The Ridge minimum is less than
 half the OLS minimum, but on the same five folds the difference is $-0.016 \pm
 0.013$ (mean $\pm$ standard error over folds), not significant: Ridge mainly
 avoids the one fold with the extrapolation failure that inflates the OLS
-estimate. The Lasso surface looks different. It hardly depends on the degree
-beyond $p\approx8$ and has its minimum at a low degree and a large penalty, $p
-= 6$ and $\lambda = 10^{-2.5}$ (CV MSE $0.0222$). As \cref{subsec:results-lasso}
-shows, this reflects our solver more than the Lasso model: with 5000 subgradient
-steps, the high-degree fits are far from the Lasso solution.
+estimate. The Lasso surface looks different: its minimum lies at a low degree
+and a large penalty, $p = 6$ and $\lambda = 10^{-2.5}$ (CV MSE $0.0222$).
+As \cref{subsec:results-lasso} shows, this reflects our solver more than the
+Lasso model: with 5000 subgradient steps, the high-degree fits are far from the
+Lasso solution.
 
 \begin{figure*}[htbp]
     \centering
@@ -275,38 +255,32 @@ steps, the high-degree fits are far from the Lasso solution.
 \subsection{Gradient descent}
 \label{subsec:results-gd}
 
-Linear regression is an ideal test case for gradient descent: the closed-form
-solutions are exact benchmarks, the gradient is known analytically, and the
-convexity of the cost guarantees convergence for a small enough learning rate.
-We compare the optimizers at $p = 5$, where plain GD converges in a reasonable
+The closed-form OLS and Ridge solutions are exact benchmarks for gradient
+descent. We compare the optimizers at $p = 5$, where plain GD converges in a reasonable
 number of iterations, and use $p = 10$ and $15$ to study ill-conditioning. All
-runs start from $\bm{\theta} = \bm{0}$.
+runs start from $\bm{\theta}^{(0)} = \bm{0}$.
 
-\Cref{fig:gd_convergence} shows plain GD with $\gamma = 1/L$ at $p=5$, where
+\Cref{fig:gd_convergence} shows plain GD with $\gamma = 1/\lambda_{\max}$ at $p=5$, where
 $\kappa(\bm{H}) = 604$ for OLS and $510$ for Ridge with $\lambda = 10^{-3}$.
-The relative cost gap decreases linearly on the logarithmic scale, as the
-eigen-analysis of \cref{subsec:gradient-descent} predicts: after 6000 iterations
-it is $10^{-10}$ for OLS and $10^{-12}$ for Ridge, whose better conditioning
-gives the steeper slope. The runs with analytical and automatically
-differentiated gradients are indistinguishable, as expected from their agreement
-to $5\times10^{-16}$ (\cref{subsec:verification}).
+The cost gap decreases linearly on the logarithmic scale, as
+\cref{subsec:gradient-descent} predicts, slightly faster for the better
+conditioned Ridge problem, and the runs with analytical and JAX gradients are
+indistinguishable (\cref{subsec:verification}).
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{figures/gradient_descent/gd_convergence.pdf}
-    \caption{Plain gradient descent with $\gamma = 1/L$ at $p=5$ (reference
+    \caption{Plain gradient descent with $\gamma = 1/{\lambda_{\max}}$ at $p=5$ (reference
     training set): relative gap between the cost and the cost of the closed-form
     solution vs.\ iteration, for OLS and Ridge ($\lambda=10^{-3}$), with
     analytical (thick) and JAX (dashed) gradients.}
     \label{fig:gd_convergence}
 \end{figure}
 
-\Cref{fig:gd_stability} tests the stability bound \cref{eq:gd_stability}. After
-2000 steps the cost gap decreases steadily as $\gamma$ approaches
-$2/\lambda_{\max}(\bm{H})$ and jumps to divergence immediately beyond it, for
-both OLS and Ridge. The best fixed learning rate lies just below the bound:
-the optimal constant step for a quadratic is $2/(\lambda_{\max} +
-\lambda_{\min})$, which is within $0.2\%$ of $2/\lambda_{\max}$ when
+\Cref{fig:gd_stability} confirms the stability bound \cref{eq:gd_stability}:
+the cost gap decreases as $\gamma$ approaches $2/\lambda_{\max}(\bm{H})$ and
+the iteration diverges immediately beyond it. The best fixed rate,
+$2/(\lambda_{\max}+\lambda_{\min})$, lies within $0.2\%$ of the bound when
 $\kappa \approx 600$.
 
 \begin{figure}[htbp]
@@ -327,15 +301,11 @@ and $10$ (four per decade), and a cap of $10^5$ iterations.
 rate for two of the problems. Three observations stand out.
 
 First, momentum and Adam are an order of magnitude faster than the other
-update rules. At $p=5$, momentum needs $126$ iterations and Adam $337$, against
-$3166$ for plain GD, a factor of $25$ and $9.4$; AdaGrad and RMSprop are no
-faster than plain GD. For the Ridge problems at $p = 10$ and $15$ the two are
-equally fast within the resolution of the learning-rate grid ($1342$ vs.\
-$1422$ and $1913$ vs.\ $1379$ iterations), about $18$ times faster than plain
-GD. Momentum also converges for learning rates beyond the plain-GD bound
-(\cref{fig:optimizer_lr_sensitivity}a); this agrees with the stability bound of
-the heavy-ball iteration for a quadratic, $\gamma < 2(1+\beta)/\lambda_{\max}
-= 0.58$ at $p=5$.
+update rules. At $p=5$, momentum needs $126$ iterations and Adam $339$, against
+$3194$ for plain GD; AdaGrad and RMSprop are no faster than plain GD. For Ridge
+at $p=10$ and $15$ the two are equally fast within the resolution of the
+learning-rate grid (momentum $1425$ and $1382$, Adam $1344$ and $1917$), about
+$18$ times faster than plain GD.
 
 Second, Adam is by far the least sensitive to the learning rate: it reaches the
 tolerance for all 25 learning rates at $p=5$ and for 23 of 25 at $p = 10$ and
@@ -347,19 +317,17 @@ because they normalize the step by the gradient magnitude. RMSprop, which does
 the same with a short memory, only converges for $\gamma \leq 6\times10^{-4}$:
 at larger $\gamma$ its normalized steps keep it oscillating around the minimum.
 
-Third, the conditioning decides everything. For OLS at $p = 10$ and $15$, with
-$\kappa(\bm{H}) = 2.8\times10^6$ and $2.6\times10^{10}$, no optimizer reaches
-the tolerance within $10^5$ iterations; the best relative error at $p=10$ is
-$0.28$ (Adam), and at $p = 15$ none gets below $0.99$, barely closer to
-$\hat{\bm{\theta}}$ than the starting point $\bm{\theta}=\bm{0}$ (error $1$). With $\gamma = 1/L$, plain GD
-would need about $\kappa\ln 10^3 \approx 2\times10^7$ iterations at $p=10$. A
-penalty of only $\lambda = 10^{-3}$, which barely changes the fit, reduces
-$\kappa$ to $\sim10^4$ (\cref{subsec:gradient-descent}), and all optimizers
-converge again. Where they converge, the iteration counts of plain GD scale
-with $\kappa$ as predicted: $3166 \approx 5\kappa$ at $p=5$ and $26244 \approx 4
-\kappa$ for Ridge at $p = 10$. The OLS parameters at high degree are, however,
-ill-determined anyway (\cref{fig:ols_coefficients_vs_degree}): a relative
-parameter error of order one does not preclude a good prediction.
+Third, the conditioning decides everything. For OLS at $p = 10$ and $15$
+($\kappa = 2.8\times10^6$ and $2.6\times10^{10}$), no optimizer reaches the
+tolerance within $10^5$ iterations, and at $p=15$ none gets closer to
+$\hat{\bm{\theta}}$ than $0.99$ relative error, barely better than the
+starting point; plain GD would need about $\kappa\ln 10^3 \approx 2\times10^7$
+iterations at $p=10$. A penalty of only $\lambda = 10^{-3}$ reduces $\kappa$ to
+$\sim10^4$, and all optimizers converge again, plain GD in about $4$--$5\kappa$
+iterations as predicted ($3194$ at $p=5$, $26302$ for Ridge at $p=10$). The
+high-degree OLS parameters are ill-determined anyway
+(\cref{fig:ols_coefficients_vs_degree}), so a large parameter error does not
+preclude a good prediction.
 
 
 \begin{table*}[htbp]
@@ -390,13 +358,11 @@ parameter error of order one does not preclude a good prediction.
 \subsection{Lasso}
 \label{subsec:results-lasso}
 
-We solve Lasso with our gradient-descent code, using the subgradient
-\cref{eq:lasso_subgradient} with each of the update rules of
-\cref{subsec:results-gd}, and compare with scikit-learn's coordinate-descent
-\texttt{Lasso}, whose solution defines the optimal cost $C^*$.
-\Cref{fig:lasso_convergence} shows the convergence at two configurations of the
-reference data: the one selected by 5-fold CV ($p = 6$, $\lambda =
-10^{-2.5}$), and a high-degree one ($p = 15$, $\lambda = 10^{-4}$).
+\Cref{fig:lasso_convergence} shows our subgradient solver
+(\cref{eq:lasso_subgradient}) with each update rule, measured against the cost
+$C^*$ of scikit-learn's coordinate-descent \texttt{Lasso}, at the configuration
+selected by 5-fold CV ($p = 6$, $\lambda = 10^{-2.5}$) and at a high-degree one
+($p = 15$, $\lambda = 10^{-4}$).
 
 \begin{figure*}[htbp]
     \centering
@@ -405,52 +371,32 @@ reference data: the one selected by 5-fold CV ($p = 6$, $\lambda =
     cost $C^*$ of scikit-learn's solution vs.\ iteration, from $\bm{\theta} =
     \bm{0}$, for each update rule (reference training set). (a) The
     configuration selected by 5-fold CV, $p=6$, $\lambda=10^{-2.5}$. (b) $p=15$,
-    $\lambda=10^{-4}$. Plain GD and momentum use $\gamma = 1/L$.}
+    $\lambda=10^{-4}$. Plain GD and momentum use $\gamma = 1/\lambda_{\max}$.}
     \label{fig:lasso_convergence}
 \end{figure*}
 
 At $p=6$, where the smooth part of the cost has $\kappa = 2.3\times10^3$, all
 update rules approach $C^*$, but none converges in the usual sense. Each levels
 off at a gap set by its step size, as expected for the subgradient method with
-a fixed step (\cref{subsec:gradient-descent}): momentum at $8\times10^{-6}$
-after a few thousand iterations, RMSprop at $4\times10^{-4}$, and Adam, whose
-normalized step does not shrink near the minimum, oscillates between
-$10^{-4}$ and $10^{-2}$ and is at $2.4\times10^{-3}$ after $5\times10^{4}$
-iterations, worse than after 5000 ($8.7\times10^{-4}$). Plain GD and AdaGrad,
-whose effective steps are smallest near the end, reach $10^{-6}$. The
-coefficients from our default setting (Adam, 5000 iterations) differ from
-scikit-learn's by at most $4\times10^{-3}$, but scikit-learn sets the
-coefficient of $x^5$ exactly to zero, while ours is $-3.8\times10^{-3}$: our
-solver produced no exact zeros in any of the fits we examined.
-
-The analytical subgradient uses $\operatorname{sign}(0)=0$; the gradient from
-JAX of $|\theta_j|$ at exactly $\theta_j = 0$ is $1$ (\cref{subsec:verification}).
-Both are valid subgradients, since $\partial|\theta_j| = [-1,1]$ at zero, but
-the choice rarely matters in practice: the iterates are almost never exactly
-zero, which is the reason for the oscillation in the first place.
+a fixed step (\cref{subsec:gradient-descent}): plain GD and AdaGrad, whose
+effective steps are smallest, reach $10^{-6}$, momentum $8\times10^{-6}$ and
+RMSprop $4\times10^{-4}$, while Adam, whose normalized step does not shrink
+near the minimum, oscillates between $10^{-4}$ and $10^{-2}$. Our default
+(Adam, 5000 iterations) differs from scikit-learn's coefficients by at most
+$4\times10^{-3}$, but where scikit-learn sets the coefficient of $x^5$ exactly
+to zero, ours is $-3.8\times10^{-3}$; our solver produced no exact zeros in any
+fit we examined.
 
 At $p = 15$, with $\kappa = 2.6\times10^{10}$, the picture is much worse
-(\cref{fig:lasso_convergence}b). After $5\times10^4$ iterations Adam is at a
-gap of $1.1\times10^{-2}$, momentum at $2.5\times10^{-2}$, and the others above
-$0.1$; scikit-learn's coordinate descent itself needs $4\times10^5$ passes.
-\Cref{fig:lasso_coefficients} compares the coefficients: scikit-learn sets five
-of the 15 to zero, while ours after 5000 iterations differ by up to $4.8$ and
-are as large as $1.6$ where scikit-learn's are zero; even after $5\times10^4$
-iterations they differ by up to $0.5$. Our Lasso fits at high degree are
+(\cref{fig:lasso_convergence}b): after $5\times10^4$ iterations the best
+gap is $1.1\times10^{-2}$ (Adam), and scikit-learn's coordinate descent itself
+needs $4\times10^5$ passes. scikit-learn sets five of the 15 coefficients to
+zero, while ours after 5000 iterations differ from its coefficients by up to
+$4.8$ and are as large as $1.6$ where scikit-learn's are zero. Our Lasso fits at high degree are
 therefore early-stopped gradient descent rather than Lasso solutions. This
 explains the Lasso CV surface of \cref{fig:cv_heatmaps}c: at high degree the
 fits are poor regardless of $\lambda$, so CV prefers a low degree, where the
 solver converges.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\linewidth]{figures/lasso/lasso_coefficients.pdf}
-    \caption{Lasso coefficients of the standardized features at $p=15$,
-    $\lambda=10^{-4}$ (reference training set): scikit-learn (circles; squares
-    mark exact zeros) and our subgradient descent with Adam after 5000 and
-    $5\times10^4$ iterations.}
-    \label{fig:lasso_coefficients}
-\end{figure}
 
 \subsection{Stochastic gradient descent}
 \label{subsec:results-sgd}
@@ -458,8 +404,8 @@ solver converges.
 \Cref{fig:sgd_batch} and \cref{tab:sgd} compare mini-batch SGD with full-batch
 GD for OLS at $p = 5$, at equal computational cost measured in floating-point
 operations of the gradient evaluations: one epoch of SGD costs as much as one
-full-batch step. Plain SGD uses $\gamma_0 = 1/L$ and Adam $\gamma_0=0.03$ (the
-best fixed rate of \cref{tab:optimizers}), both with the decay $\gamma_t =
+full-batch step. Plain SGD uses $\gamma_0 = 1/\lambda_{\max}$ and Adam $\gamma_0=0.03$ (the
+best fixed rate at $p=5$ in \cref{fig:optimizer_lr_sensitivity}), both with the decay $\gamma_t =
 \gamma_0/(1+10^{-3}t)$.
 
 With plain updates, small mini-batches make faster progress per FLOP early on,
@@ -480,7 +426,7 @@ settles again.
     \includegraphics[width=\textwidth]{figures/sgd/sgd_batch_size_sweep.pdf}
     \caption{Relative cost gap (OLS, $p=5$) vs.\ cumulative FLOPs of the gradient
     evaluations for mini-batch sizes $M \in \{4, 16, 32\}$ and the full batch
-    ($M = 80$), over 2000 epochs, for (a) plain SGD with $\gamma_0 = 1/L$ and (b)
+    ($M = 80$), over 2000 epochs, for (a) plain SGD with $\gamma_0 = 1/\lambda_{\max}$ and (b)
     Adam with $\gamma_0 = 0.03$; SGD with the decay $\gamma_t=\gamma_0/(1+10^{-3}t)$.
     Values below $10^{-16}$ are shown at $10^{-16}$.}
     \label{fig:sgd_batch}
@@ -488,8 +434,8 @@ settles again.
 
 \begin{table}[htbp]
     \centering
-    \caption{Full-batch GD vs.\ mini-batch SGD ($M = 16$) after 2000 epochs at
-    $p=5$: number of updates, FLOPs of the gradient evaluations, final relative
+    \caption{Full-batch GD vs.\ mini-batch SGD ($M = 16$) after 2000 epochs for
+    OLS at $p=5$ (Ridge with $\lambda=10^{-3}$ behaves the same): number of updates, FLOPs of the gradient evaluations, final relative
     cost gap, and median wall-clock time of three runs.}
     \label{tab:sgd}
     {\footnotesize\setlength{\tabcolsep}{3pt}
@@ -500,7 +446,7 @@ settles again.
 takes three to four times longer in wall-clock time, because each of its five
 times more numerous updates carries a fixed Python overhead that is large
 compared with the arithmetic for 16 rows. For a problem with 80 training points
-and 6 parameters, SGD thus has no advantage: its benefit, cheap updates when
+and 5 parameters, SGD thus has no advantage: its benefit, cheap updates when
 $n$ is large and the gradient is expensive, does not apply, and its noise
 prevents it from reaching the accuracy of full-batch methods without a carefully
 tuned decay of the learning rate.
@@ -554,11 +500,10 @@ candidates is lower even when no candidate is better. On held-out data the
 advantage disappears: Ridge beats OLS on the test set in 15 of 31 data sets,
 with a median relative difference of $0.0\%$, and in the true error in 19 of
 31, with a median of $-0.2\%$. The penalty buys stability rather than
-accuracy: it lets CV select a higher degree (median 12 instead of 10), with a
-smaller bias, without an increase in variance. The means are dominated by a few
-data sets in which the selected model extrapolates badly: Ridge with $p=15$ and
-$\lambda = 10^{-10}$ reaches a true MSE of $18$ on one data set, where all of
-the error comes from $x$ beyond the largest training input.
+accuracy: it lets CV select a higher degree (median 12 instead of 10)
+without the growth of the test error that OLS shows there
+(\cref{fig:ridge_test_mse}). The means are dominated by a few
+data sets in which the selected model extrapolates badly.
 
 Lasso, fitted with our subgradient solver, is worse than OLS by every measure:
 it beats OLS in only 11 (CV), 12 (test) and 10 (true error) of the 31 data sets,
@@ -570,8 +515,7 @@ zero coefficient. This comparison therefore measures our optimizer as much as
 the Lasso model; a solver that converges at high degree could change the
 ranking.
 
-Which term of the bias--variance decomposition does each method attack? OLS
-controls the variance only through the degree. Ridge reduces the variance
+OLS controls the variance only through the degree. Ridge reduces the variance
 directly by shrinking the small-singular-value directions
 (\cref{fig:ridge_shrinkage}), at the cost of bias along them, which allows a
 more flexible, less biased model for the same variance. Lasso aims at the same
@@ -579,7 +523,9 @@ term by setting coefficients exactly to zero, but our fits never reach that
 regime; what limits them in practice is the incomplete optimization, which acts
 like early stopping and adds bias. Our numerical evidence supports the reading
 for Ridge qualitatively (higher selected degrees, flat error curves in
-\cref{fig:ridge_test_mse}), but it also shows its limits for this problem. The
+\cref{fig:ridge_test_mse}), but we did not decompose the Ridge error into bias
+and variance directly, and the evidence also shows the limits of Ridge for this
+problem. The
 selected Ridge penalties are tiny, $\lambda \in [10^{-12}, 3\times10^{-5}]$
 (5 of 31 at the lower end of the grid, i.e.\ effectively OLS), because with $n
 = 100$ and $\sigma=0.1$ the remaining error of a well-chosen OLS fit is

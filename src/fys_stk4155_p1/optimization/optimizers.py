@@ -1,8 +1,5 @@
 """Optimizers."""
 
-# TODO: Consider adding a `decay` parameter for learning rate scheduling
-# (ref. Géron Chapter 11 and Hjorth-Jensen section 4.7.1)
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -21,6 +18,17 @@ class Optimizer(ABC):
 
     Raises:
         ValueError: If `learning_rate` is not strictly positive.
+
+    LLM-assisted
+    ------------
+    Tool: Claude (September 2026)
+    Role: Provided the framework of this base class (the abstract reset/step
+        interface) and the `_check_shapes`/`_init_or_check_state` shape
+        validation helpers shared by the subclasses below.
+    Modifications: Implemented the Plain/Momentum/AdaGrad/RMSProp/Adam update
+        rules ourselves from the course formulas; tested against known-input,
+        one-step values and on a quadratic test problem
+        (tests/optimization/test_optimizers.py).
     """
 
     def __init__(self, learning_rate: float) -> None:
@@ -121,7 +129,7 @@ class Plain(Optimizer):
         return theta - self.learning_rate * grad
 
 
-class Momentum(Optimizer):  # TODO: Should we add a Nesterov flag?
+class Momentum(Optimizer):
     """Gradient descent with momentum.
 
     Accumulates an exponentially weighted moving average of past gradients

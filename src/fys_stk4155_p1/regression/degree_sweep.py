@@ -49,6 +49,15 @@ def fit_polynomial_degree_sweep(
         theta arrays, one per degree; theta[i] is the coefficient of the
         standardized x^(i+1) term), "mse_train", "mse_test", "r2_train", "r2_test"
         (arrays aligned with "degrees").
+
+    LLM-assisted
+    ------------
+    Tool: Claude (September 2026)
+    Role: Extracted this function from the per-degree fit/scale/score loop
+        duplicated across our OLS and Ridge notebooks, and generalized it to
+        take `model_factory` so both share one sweep.
+    Modifications: Verified the outputs match the original notebook results
+        for OLS and Ridge (tests/regression/test_degree_sweep.py).
     """
     degrees_arr = np.array(list(degrees))
     max_degree = int(degrees_arr.max())

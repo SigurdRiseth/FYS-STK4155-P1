@@ -1,13 +1,6 @@
 \section{Methods}
 \label{sec:method}
 
-This section presents the models, the error decomposition and the numerical
-methods of the study: linear regression by ordinary least squares, Ridge and
-Lasso; the bias--variance decomposition; the bootstrap and $k$-fold
-cross-validation; and gradient-based optimization, including its
-application to Lasso and automatic differentiation. We assume the reader has
-familiarity with basic linear algebra and statistics.
-
 \subsection{Linear regression}
 \label{subsec:linear-regression}
 
@@ -22,20 +15,19 @@ unknown function $f$ and the noise is i.i.d.\ Gaussian with zero mean and varian
 $\sigma^2$. A polynomial model of degree $p$ is linear in its parameters: with
 the design matrix $\bm{X} \in \mathbb{R}^{n\times p}$, containing the columns
 $\bm{x}, \dots, \bm{x}^p$, and the parameter vector $\bm{\theta}\in\mathbb{R}^{p}$, the
-prediction is $\tilde{\bm{y}} = \beta_0 + \bm{X}\bm{\theta}$, with the
-intercept $\beta_0$ fit separately from $\bm\theta$ by centering the target
-rather than through a column of $\bm{X}$ (\cref{subsec:data})~\cite{hjorth-jensen_2026}.
+prediction is $\tilde{\bm{y}} = \theta_0 + \bm{X}\bm{\theta}$, with the
+intercept $\theta_0$ fit separately from $\bm\theta$ by centering the target
+rather than through a column of $\bm{X}$~\cite{hjorth-jensen_2026}.
 The cost functions below are written for this already-centered target, so
-$\beta_0$ does not appear in them. The goal of
+$\theta_0$ does not appear in them. The goal of
 linear regression is to choose $\hat{\bm{\theta}}$ so that the fitted model
-$g(\bm{X}; \hat{\bm{\theta}}) = \beta_0 + \bm{X}\hat{\bm{\theta}}$ best
+$g(\bm{X}; \hat{\bm{\theta}}) = \theta_0 + \bm{X}\hat{\bm{\theta}}$ best
 approximates the unknown function $f$ on the data
 $\mathcal{D}$~\cite{mehta_2019}.
 
-\subsubsection{Singular value decomposition}
 Any matrix $\bm{X}$ can be factorized as
 $\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^\top$, with $\bm{U}$ and $\bm{V}$ orthogonal and
-$\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_0 \geq \sigma_1 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
+$\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_1 \geq \sigma_2 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
 \sigma_{\max}/\sigma_{\min}$ is the 2-norm condition number of $\bm{X}$~\cite{hjorth-jensen_2026}.
 The monomial columns $\bm{x}^j$ on $[-1,1]$ become nearly parallel as $j$ grows,
 so $\kappa_2(\bm{X})$ grows exponentially with the degree; this ill-conditioning
@@ -59,10 +51,9 @@ $\bm{X}$ has full column rank, the normal equations have the unique solution
 If $\bm{X}$ is rank-deficient, $\bm{X}^\top\bm{X}$ is singular and the OLS
 minimizer is not unique~\cite{mehta_2019}. In this case, the Moore--Penrose pseudoinverse gives
 the minimum-norm OLS solution,
-\begin{equation}
-    \hat{\bm{\theta}}_\text{OLS}
-    = \bm{X}^{+}\bm{y}
-    = \bm{V\Sigma}^{+}\bm{U}^\top,
+\begin{equation}\label{eq:ols-pseudoinverse}
+    \hat{\bm{\theta}}_\text{OLS} = \bm{X}^{+}\bm{y}
+    = \bm{V}\bm{\Sigma}^{+}\bm{U}^\top\bm{y},
 \end{equation}
 where $\bm{X}^{+}$ denotes the Moore--Penrose pseudoinverse~\cite{goodfellow_2016}.
 We compute OLS this way as forming
@@ -70,8 +61,8 @@ $\bm{X}^\top\bm{X}$ squares the condition number, which for our design matrices
 can exhaust double precision at moderate degree~\cite{hjorth-jensen_2026}.
 
 \subsubsection{Ridge regression}
-Ridge regression~\cite{hoerl_1970} adds the $\ell_2$-norm of the parameter vector
-to the as a penalty to the cost function,
+Ridge regression~\cite{hoerl_1970} adds the squared $\ell_2$-norm of the
+parameter vector as a penalty to the cost function,
 \begin{equation}\label{eq:ridge_cost}
     C_\text{Ridge}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{y}
     - \bm{X}\bm{\theta} \right\rVert_2^2 + \lambda \lVert \bm{\theta} \rVert_2^2,
@@ -117,13 +108,10 @@ of $\bm{X}$, the minimizer satisfies
     \ \text{if } \hat\theta_j = 0.
     \label{eq:lasso-optimality}
 \end{equation}
-A coefficient therefore stays exactly zero as long as its column's
-correlation with the residual is too weak to outweigh the penalty $\lambda$;
-it only enters the model once that correlation exceeds $\lambda$. Ridge's
-penalty is smooth at zero, so it has no such dead zone: any nonzero
-correlation pulls the coefficient away from zero, just scaled down. This is
-why Lasso performs variable selection while Ridge only
-shrinks~\cite[Prop.~3.7]{hjorth-jensen_2026}.
+A coefficient is therefore exactly zero unless its column's correlation
+with the residual exceeds $\lambda$. Ridge's penalty is smooth at zero and has
+no such dead zone, which is why Lasso performs variable selection while Ridge
+only shrinks~\cite[Prop.~3.7]{hjorth-jensen_2026}.
 
 \subsubsection{Error measures}
 We evaluate a prediction $\tilde{\bm{y}}$ of targets $\bm{y}$ by
@@ -214,8 +202,11 @@ with replacement, refit the model on each, and predict on a fixed test set. The
 spread of the $B$ predictions estimates $\mathrm{Var}[\tilde{\bm{y}}]$, their
 mean estimates $\mathbb{E}[\tilde{\bm{y}}]$ in \cref{eq:bias-term}, and the
 average squared error estimates the test MSE. A bootstrap sample contains on
-average only a fraction $1-(1-1/n_\text{tr})^{n_\text{tr}} \approx 1 - e^{-1}
-\approx 0.632$ of the distinct training points, so every bootstrap fit is made
+average only a fraction,
+\begin{equation}\label{eq:bootstrap-size}
+    1-(1-1/n_\text{tr})^{n_\text{tr}} \approx 1 - e^{-1} \approx 0.632,
+\end{equation}
+of the distinct training points, so every bootstrap fit is made
 from effectively fewer points than the fit on the full training
 set~\cite{hastie_2017}.
 
@@ -232,10 +223,10 @@ where $\tilde{\bm{y}}_{i}^{(-i)}$ is the prediction for fold $i$ of the
 model trained without it. We select hyperparameters (the degree $p$ and
 $\lambda$) by minimizing $\mathrm{CV}_k$ over a
 grid~\cite{hjorth-jensen_2026}. Larger $k$ trains on
-more data per fit ($1-1/k$ of it), which reduces the pessimistic bias of the
+more data per fit, which reduces the pessimistic bias of the
 estimate; but the $k$ training sets then overlap more, so the fold errors
-become more correlated and the average has higher
-variance~\cite{hastie_2017}.
+become more correlated, which can increase the variance of their
+average~\cite{hastie_2017}.
 
 \subsection{Gradient-based optimization}
 \label{subsec:gradient-descent}
@@ -246,12 +237,8 @@ For a differentiable cost $C(\bm{\theta})$, gradient descent (GD) iterates
     \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \gamma
     \nabla_{\bm{\theta}} C\big(\bm{\theta}^{(k)}\big),
 \end{equation}
-with learning rate $\gamma > 0$. Newton's method,
-$\bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \bm{H}^{-1}\nabla_{\bm{\theta}}
-C(\bm{\theta}^{(k)})$, would solve a quadratic cost in one step, but forming and
-inverting the $p\times p$ Hessian costs $\mathcal{O}(p^3)$ for $p$ parameters;
-GD replaces $\bm{H}^{-1}$ by $\gamma\bm{I}$ and costs one gradient evaluation
-per iteration~\cite{hjorth-jensen_2026}.
+with learning rate $\gamma > 0$, at the cost of one gradient evaluation per
+iteration~\cite{hjorth-jensen_2026}.
 
 For the quadratic OLS and Ridge costs the analysis is exact. The error
 $\bm{e}^{(k)} = \bm{\theta}^{(k)} - \hat{\bm{\theta}}$ obeys
@@ -266,10 +253,9 @@ $\lambda_i > 0$, that is
 The slowest direction contracts by $1-\gamma\lambda_{\min}$, so with
 $\gamma = 1/\lambda_{\max}$ reaching a relative accuracy $\epsilon$ takes about
 $\kappa(\bm{H})\ln(1/\epsilon)$ iterations, where $\kappa(\bm{H}) =
-\lambda_{\max}/\lambda_{\min} = \kappa(\bm{X})^2$ for OLS. For Ridge with
-centered features, an unpenalized intercept and $\lambda \leq 1$,
-$\lambda_{\min} \geq 2\lambda$, so $\kappa(\bm{H}) \leq \lambda_{\max}/(2\lambda)$
-however ill-conditioned $\bm{X}$ is.
+\lambda_{\max}/\lambda_{\min} = \kappa(\bm{X})^2$ for OLS.
+For Ridge every eigenvalue of $\bm{H}$ is at least $2\lambda$, so
+$\kappa(\bm{H}) \leq \lambda_{\max}/(2\lambda)$ however ill-conditioned $\bm{X}$ is.
 
 \subsubsection{Momentum}
 Momentum adds a fraction of the previous step,
@@ -286,12 +272,12 @@ Hessians~\cite{goodfellow_2016,hjorth-jensen_2026}.
 \subsubsection{Adaptive learning rates}
 AdaGrad~\cite{duchi_2011} scales every coordinate by the
 accumulated squared gradients,
-\begin{align}
-    \bm{r}^{(k)} &= \bm{r}^{(k-1)} + \bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+\begin{align}\label{eq:adagrad-iterate}
+    \bm{r}^{(k)} &= \bm{r}^{(k-1)} + \bm{g}^{(k)}\odot\bm{g}^{(k)},\nonumber \\
     \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \frac{\gamma}{\sqrt{\bm{r}^{(k)}}
     + \epsilon}\odot\bm{g}^{(k)},
 \end{align}
-where $\bm{g}^{(k)}$ is the gradient, $\odot$ the elementwise product, and the
+where $\bm{g}^{(k)}$ is the gradient, $\odot$ the Hadamard product, and the
 square root and division are elementwise. The effective step of each coordinate
 decreases monotonically. RMSprop replaces the sum by an exponentially decaying
 average, $\bm{v}^{(k)} = \rho\bm{v}^{(k-1)} + (1-\rho)\,\bm{g}^{(k)}\odot
@@ -299,9 +285,9 @@ average, $\bm{v}^{(k)} = \rho\bm{v}^{(k-1)} + (1-\rho)\,\bm{g}^{(k)}\odot
 Adam~\cite{kingma_2017} combines a decaying average of the
 gradient (momentum) with RMSprop's scaling and corrects both for their
 initialization at zero:
-\begin{align}
-    \bm{m}^{(k)} &= \beta_1\bm{m}^{(k-1)} + (1-\beta_1)\,\bm{g}^{(k)}, \\
-    \bm{v}^{(k)} &= \beta_2\bm{v}^{(k-1)} + (1-\beta_2)\,\bm{g}^{(k)}\odot\bm{g}^{(k)}, \\
+\begin{align}\label{eq:adam-iterate}
+    \bm{m}^{(k)} &= \beta_1\bm{m}^{(k-1)} + (1-\beta_1)\,\bm{g}^{(k)},\nonumber \\
+    \bm{v}^{(k)} &= \beta_2\bm{v}^{(k-1)} + (1-\beta_2)\,\bm{g}^{(k)}\odot\bm{g}^{(k)},\nonumber \\
     \bm{\theta}^{(k+1)} &= \bm{\theta}^{(k)} - \gamma\,
     \frac{\bm{m}^{(k)}/(1-\beta_1^{k})}{\sqrt{\bm{v}^{(k)}/(1-\beta_2^{k})}+\epsilon}.
 \end{align}
@@ -351,10 +337,10 @@ property of the Lasso solution, therefore appear only by coincidence.
 Automatic differentiation (AD) computes derivatives of a function given as a
 program by applying the chain rule to the sequence of elementary operations the
 program executes~\cite{baydin_2018}. It is
-neither symbolic differentiation, which manipulates expressions and can produce
-exponentially large derivative expressions, nor numerical differentiation, whose
+neither symbolic differentiation, which requires the function as a single closed-form
+expression and can suffer from expression swell, nor numerical differentiation, whose
 finite differences carry truncation and round-off errors: AD evaluates the
-derivative exactly up to floating-point round-off, at a specific input. In
+derivative exactly up to floating-point round-off, at a specific input~\cite{hjorth-jensen_2026}. In
 reverse mode, which JAX's \texttt{grad} uses for a scalar cost, the program is
 run forward once while storing intermediate values, and derivatives are then
 propagated backwards; the full gradient costs a small constant multiple of one

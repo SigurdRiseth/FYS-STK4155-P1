@@ -1,5 +1,15 @@
 """JAX-autodiff gradients for regression.cost.cost (L2) and regression.cost.lasso_cost
-(L1), cross-checked against analytical_gradient/lasso_subgradient."""
+(L1), cross-checked against analytical_gradient/lasso_subgradient.
+
+LLM-assisted
+------------
+Tool: Claude (September 2026)
+Role: Suggested building the jax.jit-wrapped gradient closures once at module
+    scope, rather than re-tracing/jitting inside
+    autodiff_gradient/lasso_autodiff_gradient on every call.
+Modifications: Verified the jitted gradients still match the analytical ones
+    to machine precision (tests/regression/test_autodiff.py).
+"""
 
 import jax
 import jax.numpy as jnp

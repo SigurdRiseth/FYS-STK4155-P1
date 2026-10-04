@@ -16,9 +16,7 @@ degree reduces the approximation error, but increases sensitivity to noise in
 the data. The Weierstrass approximation theorem~\cite{weierstrass_1885} guarantees that any continuous
 function on a closed interval can be approximated uniformly to arbitrary
 accuracy by polynomials, but it says nothing about how to find such a polynomial
-from a finite set of noisy samples, or which degree to choose. Increasing the
-degree reduces the approximation error of the model class, yet it also makes the
-fitted coefficients increasingly sensitive to the particular data set. This
+from a finite set of noisy samples, or which degree to choose. This
 tension is the bias--variance trade-off~\cite{hjorth-jensen_2026, hastie_2017}. Its lessons carry over essentially
 unchanged to the more flexible models used elsewhere in machine learning, which
 makes polynomial regression a transparent laboratory for them.
@@ -30,7 +28,7 @@ Runge's function,
 is the classical example of how this can fail. Although $f$ is smooth,
 its polynomial interpolants on equispaced nodes diverge near the endpoints
 as the degree increases;
-this is Runge's phenomenon~\cite{runge_1901,demarchi_2020}. %verify runge1901
+this is Runge's phenomenon~\cite{runge_1901,demarchi_2020}.
 Least-squares regression on noisy data is not interpolation,
 but it faces the same underlying difficulty in a statistical form.
 A high-degree fit on equispaced points is free to oscillate between the data,
@@ -42,7 +40,7 @@ should be selected and controlled.
 We study three linear models. Ordinary least squares (OLS) provides the
 unregularized baseline,
 whose test error as a function of degree exposes the trade-off directly.
-Ridge regression~\cite{hoerl_1970} and Lasso regression~\cite{tibshirani_1996} %verify
+Ridge regression~\cite{hoerl_1970} and Lasso regression~\cite{tibshirani_1996}
 add an $\ell_2$ and an $\ell_1$ penalty, respectively, trading a controlled increase in bias for
 a reduction in variance. The Ridge penalty shrinks all coefficients, while the Lasso penalty can
 set some of them exactly to zero. To estimate the test error and select the degree and penalty,

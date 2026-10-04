@@ -64,7 +64,8 @@ estimated the test error with the bootstrap and k-fold cross-validation, and
 replaced the closed-form solutions with our own gradient-descent code.
 Since the data were synthetic, we compared every estimate
 with the true error. The bootstrap and cross-validation selected
-median degrees of 8 and 10, against 14 for the true optimum, because their
+median degrees of 8 and 10--12, respectively, against 14 for the true
+optimum, because their
 estimates are dominated by extrapolation beyond the resampled training range.
 Over 31 data sets, Ridge lowered the cross-validation error of least squares by
 a median of 5\% but not the held-out error, and subgradient-descent Lasso did

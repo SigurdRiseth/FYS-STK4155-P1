@@ -89,7 +89,6 @@ def bootstrap_bias_variance_sweep(
     Tool: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
     Role: Added the optional `f_true` / "bias2_f" output (snippet).
     Verification: tests/resampling/test_bootstrap.py.
-    Modifications: TODO(author): describe your review/changes.
     """
     degrees_arr = np.array(list(degrees))
     rng = np.random.default_rng(seed)

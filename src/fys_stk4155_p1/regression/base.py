@@ -26,6 +26,15 @@ class LinearModel(BaseEstimator, RegressorMixin, ABC):
     coefficients and the intercept then decouple completely: for any penalty
     on the non-intercept coefficients alone, the optimal intercept is exactly
     `y.mean()` regardless of their value.
+
+    LLM-assisted
+    ------------
+    Tool: Claude (September 2026)
+    Role: Suggested inheriting BaseEstimator/RegressorMixin and the fit/predict
+        split around `_fit_centered` for the scikit-learn estimator interface.
+    Modifications: Integrated into the existing model classes; verified
+        indirectly through the OLS/Ridge/Lasso test suites and by using the
+        models inside scikit-learn's Pipeline/KFold/cross_validate.
     """
 
     coef_: NDArray[np.float64]
