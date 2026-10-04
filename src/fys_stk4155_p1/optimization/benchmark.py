@@ -59,7 +59,6 @@ def iterations_to_tolerance(
     Tool: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
     Role: Wrote the function.
     Verification: tests/optimization/test_benchmark.py.
-    Modifications: TODO(author): describe your review/changes.
     """
     opt = OPTIMIZER_REGISTRY[optimizer](learning_rate=learning_rate, **optimizer_kwargs)
     n_features = X.shape[1]

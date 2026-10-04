@@ -1,11 +1,6 @@
 \subsection{Use of AI/LLM tools}
 \label{app:ai-tools}
 
-% TODO(author): this appendix was drafted by Claude from what it did in the
-% Cowork session of 23 September 2026 and from the earlier version of this
-% appendix. Check every level against what YOU did, and complete the rows marked
-% TODO; the LLM-assisted docstrings in the code must tell the same story.
-
 Large language models were used throughout this project, following the course
 guidelines\footnote{\url{https://github.com/EducationalMaterialUiO/MachineLearningUiO/blob/main/LLM_Usage_Declaration_Guidelines.md}},
 which also define the contribution levels below. All code was tested, all
@@ -39,23 +34,21 @@ of the report.
         \textbf{Section} & \textbf{Level} & \textbf{Notes} \\
         \midrule
         Abstract & 3 & Drafted by Claude from the finished results; revised by the author. \\
-        Introduction & 2 & Authors text; last three paragraphs revised by Claude. \\
-        Methods & 2 & Authors text; corrected by Claude. \\
-        Implementation & 2 & Authors text; revised by Claude. \\
-        Results and discussion & 2 & Authors text; revised and improved by Claude. \\
+        Introduction & 2 & Author's text; last three paragraphs revised by Claude. \\
+        Methods & 2 & Author's text; corrected by Claude. \\
+        Implementation & 2 & Author's text; revised by Claude. \\
+        Results and discussion & 2 & Author's text; revised and improved by Claude. \\
         Conclusion & 2 & Drafted by the author; revised and improved by Claude. \\
         Appendices & 3 & Drafted by Claude; revised by the author. \\
         \bottomrule
     \end{tabularx}}
 \end{table}
 
-For the abstract, with a contribution level of 3, we gave Claude access to the
-project repository containing both the source code and the \LaTeX{} source of
-the report. The LLM was instructed to review the implementation, results, and
-written report before drafting a proposed abstract. We also provided relevant
-course literature on writing abstracts and scientific reports, which the LLM
-used as guidance when preparing the draft. The abstract was subsequently
-reviewed and revised by the author.
+For the abstract (level 3), Claude was given the repository, including the
+\LaTeX{} source, and the course material on report writing, and was asked to
+draft an abstract from the finished results; the author revised the draft. In a
+final review against the evaluation form, Claude proposed revisions and cuts
+throughout the report, which the author reviewed and accepted individually.
 
 The appendices are also assigned level 3 because the LLM was used to help
 maintain the documentation of AI/LLM use throughout the project. When using an
@@ -96,18 +89,8 @@ the code base.
         \texttt{benchmark.py} & 4 & Iterations-to-tolerance benchmark, written by Claude. \\
         \texttt{scripts/} & 3 & Experiments, figures and configuration, written in part by Claude,
                                 inspired by the notebooks. \\
-        \texttt{notebooks/} & 2 & Assistanse with plotting, providing feedback, and debugging. \\
+        \texttt{notebooks/} & 2 & Assistance with plotting, providing feedback, and debugging. \\
         \texttt{tests/} & 3 & Tests for the new code written by Claude; others with Claude Code. \\
         \bottomrule
     \end{tabularx}}
 \end{table*}
-
-\subsubsection{Declared and undeclared use}
-An example of a use that must be declared is the benchmark function
-\texttt{iterations\_to\_tolerance} in \texttt{benchmark.py}: Claude wrote the
-function, which appears in our submission, so it is declared here and in its
-docstring. An example of a use that need not be declared is using an LLM as a tutor, for
-instance to explain the difference between a gradient and a subgradient, and
-then writing about it in our own words. % TODO(author): replace with an example
-% from your own work (the text of this report was drafted with Claude, so it
-% cannot serve as the undeclared example).

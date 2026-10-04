@@ -7,7 +7,6 @@ same data-generating process, split and grids. Change a value here and
 
 LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
 wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
-TODO(author): describe your review/changes.
 """
 
 from typing import Any

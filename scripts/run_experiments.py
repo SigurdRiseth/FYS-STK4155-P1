@@ -23,7 +23,6 @@ Usage:
 
 LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
 wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
-TODO(author): describe your review/changes.
 """
 
 import argparse

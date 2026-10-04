@@ -1,13 +1,6 @@
 \section{Methods}
 \label{sec:method}
 
-This section presents the models, the error decomposition and the numerical
-methods of the study: linear regression by ordinary least squares, Ridge and
-Lasso; the bias--variance decomposition; the bootstrap and $k$-fold
-cross-validation; and gradient-based optimization, including its
-application to Lasso and automatic differentiation. We assume the reader has
-familiarity with basic linear algebra and statistics.
-
 \subsection{Linear regression}
 \label{subsec:linear-regression}
 
@@ -22,20 +15,19 @@ unknown function $f$ and the noise is i.i.d.\ Gaussian with zero mean and varian
 $\sigma^2$. A polynomial model of degree $p$ is linear in its parameters: with
 the design matrix $\bm{X} \in \mathbb{R}^{n\times p}$, containing the columns
 $\bm{x}, \dots, \bm{x}^p$, and the parameter vector $\bm{\theta}\in\mathbb{R}^{p}$, the
-prediction is $\tilde{\bm{y}} = \beta_0 + \bm{X}\bm{\theta}$, with the
-intercept $\beta_0$ fit separately from $\bm\theta$ by centering the target
-rather than through a column of $\bm{X}$ (\cref{subsec:data})~\cite{hjorth-jensen_2026}.
+prediction is $\tilde{\bm{y}} = \theta_0 + \bm{X}\bm{\theta}$, with the
+intercept $\theta_0$ fit separately from $\bm\theta$ by centering the target
+rather than through a column of $\bm{X}$~\cite{hjorth-jensen_2026}.
 The cost functions below are written for this already-centered target, so
-$\beta_0$ does not appear in them. The goal of
+$\theta_0$ does not appear in them. The goal of
 linear regression is to choose $\hat{\bm{\theta}}$ so that the fitted model
-$g(\bm{X}; \hat{\bm{\theta}}) = \beta_0 + \bm{X}\hat{\bm{\theta}}$ best
+$g(\bm{X}; \hat{\bm{\theta}}) = \theta_0 + \bm{X}\hat{\bm{\theta}}$ best
 approximates the unknown function $f$ on the data
 $\mathcal{D}$~\cite{mehta_2019}.
 
-\subsubsection{Singular value decomposition}
 Any matrix $\bm{X}$ can be factorized as
 $\bm{X} = \bm{U}\bm{\Sigma}\bm{V}^\top$, with $\bm{U}$ and $\bm{V}$ orthogonal and
-$\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_0 \geq \sigma_1 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
+$\bm{\Sigma}$ rectangular diagonal with the singular values $\sigma_1 \geq \sigma_2 \geq \dots \geq 0$. The ratio $\kappa_2(\bm{X}) =
 \sigma_{\max}/\sigma_{\min}$ is the 2-norm condition number of $\bm{X}$~\cite{hjorth-jensen_2026}.
 The monomial columns $\bm{x}^j$ on $[-1,1]$ become nearly parallel as $j$ grows,
 so $\kappa_2(\bm{X})$ grows exponentially with the degree; this ill-conditioning
@@ -116,13 +108,10 @@ of $\bm{X}$, the minimizer satisfies
     \ \text{if } \hat\theta_j = 0.
     \label{eq:lasso-optimality}
 \end{equation}
-A coefficient therefore stays exactly zero as long as its column's
-correlation with the residual is too weak to outweigh the penalty $\lambda$;
-it only enters the model once that correlation exceeds $\lambda$. Ridge's
-penalty is smooth at zero, so it has no such dead zone: any nonzero
-correlation pulls the coefficient away from zero, just scaled down. This is
-why Lasso performs variable selection while Ridge only
-shrinks~\cite[Prop.~3.7]{hjorth-jensen_2026}.
+A coefficient is therefore exactly zero unless its column's correlation
+with the residual exceeds $\lambda$. Ridge's penalty is smooth at zero and has
+no such dead zone, which is why Lasso performs variable selection while Ridge
+only shrinks~\cite[Prop.~3.7]{hjorth-jensen_2026}.
 
 \subsubsection{Error measures}
 We evaluate a prediction $\tilde{\bm{y}}$ of targets $\bm{y}$ by
@@ -236,8 +225,8 @@ $\lambda$) by minimizing $\mathrm{CV}_k$ over a
 grid~\cite{hjorth-jensen_2026}. Larger $k$ trains on
 more data per fit, which reduces the pessimistic bias of the
 estimate; but the $k$ training sets then overlap more, so the fold errors
-become more correlated and the average has higher
-variance~\cite{hastie_2017}.
+become more correlated, which can increase the variance of their
+average~\cite{hastie_2017}.
 
 \subsection{Gradient-based optimization}
 \label{subsec:gradient-descent}
@@ -248,12 +237,8 @@ For a differentiable cost $C(\bm{\theta})$, gradient descent (GD) iterates
     \bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \gamma
     \nabla_{\bm{\theta}} C\big(\bm{\theta}^{(k)}\big),
 \end{equation}
-with learning rate $\gamma > 0$. Newton's method,
-$\bm{\theta}^{(k+1)} = \bm{\theta}^{(k)} - \bm{H}^{-1}\nabla_{\bm{\theta}}
-C(\bm{\theta}^{(k)})$, would solve a quadratic cost in one step, but forming and
-inverting the $p\times p$ Hessian costs $\mathcal{O}(p^3)$ for $p$ parameters;
-GD replaces $\bm{H}^{-1}$ by $\gamma\bm{I}$ and costs one gradient evaluation
-per iteration~\cite{hjorth-jensen_2026}.
+with learning rate $\gamma > 0$, at the cost of one gradient evaluation per
+iteration~\cite{hjorth-jensen_2026}.
 
 For the quadratic OLS and Ridge costs the analysis is exact. The error
 $\bm{e}^{(k)} = \bm{\theta}^{(k)} - \hat{\bm{\theta}}$ obeys

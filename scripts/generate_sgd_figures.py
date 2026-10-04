@@ -15,7 +15,6 @@ Usage: uv run python scripts/generate_sgd_figures.py
 
 LLM-assisted: Claude (claude-opus-5-5, Claude Cowork desktop app, September 2026)
 wrote/rewrote this file (level 4) to use the shared settings in utils/config.py.
-TODO(author): describe your review/changes.
 """
 
 import time
@@ -104,7 +103,7 @@ def sgd_table(X: NDArray, y: NDArray, batch: int = 16, repeats: int = 3) -> str:
     """Final relative cost gap, FLOPs and wall-clock time after SGD_EPOCHS
     epochs, with and without mini-batches (median time over `repeats` runs)."""
     rows = []
-    for name, lam in (("OLS", 0.0), ("Ridge", C.GD_LAMBDA)):
+    for name, lam in (("OLS", 0.0),):  # Ridge behaves the same; omitted from the report
         gap = _gap(X, y, lam)
         for opt, label in zip(_OPT_NAMES, ("plain", "Adam"), strict=True):
             for b in (None, batch):

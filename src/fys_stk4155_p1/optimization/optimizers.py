@@ -1,8 +1,5 @@
 """Optimizers."""
 
-# TODO: Consider adding a `decay` parameter for learning rate scheduling
-# (ref. Géron Chapter 11 and Hjorth-Jensen section 4.7.1)
-
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -132,7 +129,7 @@ class Plain(Optimizer):
         return theta - self.learning_rate * grad
 
 
-class Momentum(Optimizer):  # TODO: Should we add a Nesterov flag?
+class Momentum(Optimizer):
     """Gradient descent with momentum.
 
     Accumulates an exponentially weighted moving average of past gradients
