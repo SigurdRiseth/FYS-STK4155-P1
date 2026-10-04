@@ -257,11 +257,11 @@ CV selects $p = 8$ with a CV MSE of $0.0285$. The Ridge minimum is less than
 half the OLS minimum, but on the same five folds the difference is $-0.016 \pm
 0.013$ (mean $\pm$ standard error over folds), not significant: Ridge mainly
 avoids the one fold with the extrapolation failure that inflates the OLS
-estimate. The Lasso surface looks different. It hardly depends less on the
-degree and has its minimum at a low degree and a large penalty, $p
-= 6$ and $\lambda = 10^{-2.5}$ (CV MSE $0.0222$). As \cref{subsec:results-lasso}
-shows, this reflects our solver more than the Lasso model: with 5000 subgradient
-steps, the high-degree fits are far from the Lasso solution.
+estimate. The Lasso surface looks different: its minimum lies at a low degree
+and a large penalty, $p = 6$ and $\lambda = 10^{-2.5}$ (CV MSE $0.0222$).
+As \cref{subsec:results-lasso} shows, this reflects our solver more than the
+Lasso model: with 5000 subgradient steps, the high-degree fits are far from the
+Lasso solution.
 
 \begin{figure*}[htbp]
     \centering
@@ -330,15 +330,11 @@ and $10$ (four per decade), and a cap of $10^5$ iterations.
 rate for two of the problems. Three observations stand out.
 
 First, momentum and Adam are an order of magnitude faster than the other
-update rules. At $p=5$, momentum needs $126$ iterations and Adam $337$, against
-$3166$ for plain GD; AdaGrad and RMSprop are no
-faster than plain GD. For the Ridge problems at $p = 10$ and $15$ the two are
-equally fast within the resolution of the learning-rate grid ($1342$ vs.\
-$1422$ and $1913$ vs.\ $1379$ iterations), about $18$ times faster than plain
-GD. Momentum also converges for learning rates beyond the plain-GD bound
-(\cref{fig:optimizer_lr_sensitivity}a); this agrees with the stability bound of
-the heavy-ball iteration for a quadratic, $\gamma < 2(1+\beta)/\lambda_{\max}
-= 0.58$ at $p=5$.
+update rules. At $p=5$, momentum needs $126$ iterations and Adam $339$, against
+$3194$ for plain GD; AdaGrad and RMSprop are no faster than plain GD. For Ridge
+at $p=10$ and $15$ the two are equally fast within the resolution of the
+learning-rate grid (momentum $1425$ and $1382$, Adam $1344$ and $1917$), about
+$18$ times faster than plain GD.
 
 Second, Adam is by far the least sensitive to the learning rate: it reaches the
 tolerance for all 25 learning rates at $p=5$ and for 23 of 25 at $p = 10$ and
@@ -559,9 +555,7 @@ with a median relative difference of $0.0\%$, and in the true error in 19 of
 31, with a median of $-0.2\%$. The penalty buys stability rather than
 accuracy: it lets CV select a higher degree (median 12 instead of 10), with a
 smaller bias, without an increase in variance. The means are dominated by a few
-data sets in which the selected model extrapolates badly: Ridge with $p=15$ and
-$\lambda = 10^{-10}$ reaches a true MSE of $18$ on one data set, where all of
-the error comes from $x$ beyond the largest training input.
+data sets in which the selected model extrapolates badly.
 
 Lasso, fitted with our subgradient solver, is worse than OLS by every measure:
 it beats OLS in only 11 (CV), 12 (test) and 10 (true error) of the 31 data sets,
@@ -573,8 +567,7 @@ zero coefficient. This comparison therefore measures our optimizer as much as
 the Lasso model; a solver that converges at high degree could change the
 ranking.
 
-Which term of the bias--variance decomposition does each method attack? OLS
-controls the variance only through the degree. Ridge reduces the variance
+OLS controls the variance only through the degree. Ridge reduces the variance
 directly by shrinking the small-singular-value directions
 (\cref{fig:ridge_shrinkage}), at the cost of bias along them, which allows a
 more flexible, less biased model for the same variance. Lasso aims at the same

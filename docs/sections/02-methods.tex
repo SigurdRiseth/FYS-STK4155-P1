@@ -60,9 +60,8 @@ If $\bm{X}$ is rank-deficient, $\bm{X}^\top\bm{X}$ is singular and the OLS
 minimizer is not unique~\cite{mehta_2019}. In this case, the Moore--Penrose pseudoinverse gives
 the minimum-norm OLS solution,
 \begin{equation}\label{eq:ols-pseudoinverse}
-    \hat{\bm{\theta}}_\text{OLS}
-    = \bm{X}^{+}\bm{y}
-    = \bm{V\Sigma}^{+}\bm{U}^\top,
+    \hat{\bm{\theta}}_\text{OLS} = \bm{X}^{+}\bm{y}
+    = \bm{V}\bm{\Sigma}^{+}\bm{U}^\top\bm{y},
 \end{equation}
 where $\bm{X}^{+}$ denotes the Moore--Penrose pseudoinverse~\cite{goodfellow_2016}.
 We compute OLS this way as forming
@@ -70,8 +69,8 @@ $\bm{X}^\top\bm{X}$ squares the condition number, which for our design matrices
 can exhaust double precision at moderate degree~\cite{hjorth-jensen_2026}.
 
 \subsubsection{Ridge regression}
-Ridge regression~\cite{hoerl_1970} adds the $\ell_2$-norm of the parameter vector
-to the as a penalty to the cost function,
+Ridge regression~\cite{hoerl_1970} adds the squared $\ell_2$-norm of the
+parameter vector as a penalty to the cost function,
 \begin{equation}\label{eq:ridge_cost}
     C_\text{Ridge}(\bm{\theta}) = \frac{1}{n}\left\lVert \bm{y}
     - \bm{X}\bm{\theta} \right\rVert_2^2 + \lambda \lVert \bm{\theta} \rVert_2^2,
@@ -269,10 +268,9 @@ $\lambda_i > 0$, that is
 The slowest direction contracts by $1-\gamma\lambda_{\min}$, so with
 $\gamma = 1/\lambda_{\max}$ reaching a relative accuracy $\epsilon$ takes about
 $\kappa(\bm{H})\ln(1/\epsilon)$ iterations, where $\kappa(\bm{H}) =
-\lambda_{\max}/\lambda_{\min} = \kappa(\bm{X})^2$ for OLS. For Ridge with
-centered features, an unpenalized intercept and $\lambda \leq 1$,
-$\lambda_{\min} \geq 2\lambda$, so $\kappa(\bm{H}) \leq \lambda_{\max}/(2\lambda)$
-however ill-conditioned $\bm{X}$ is.
+\lambda_{\max}/\lambda_{\min} = \kappa(\bm{X})^2$ for OLS.
+For Ridge every eigenvalue of $\bm{H}$ is at least $2\lambda$, so
+$\kappa(\bm{H}) \leq \lambda_{\max}/(2\lambda)$ however ill-conditioned $\bm{X}$ is.
 
 \subsubsection{Momentum}
 Momentum adds a fraction of the previous step,

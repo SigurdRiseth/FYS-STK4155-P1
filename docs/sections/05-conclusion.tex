@@ -30,8 +30,7 @@ estimators, requires the known $f$ and is unavailable in practice; the same
 holds for the bias against $f$. We studied a single noise level and sample
 size for the model selection, a uniform random design, and one set of folds per
 data set, so the size of the extrapolation effect is specific to these
-choices; on an equispaced or Chebyshev grid, which contain the endpoints of the
-interval, it would be much smaller. The bootstrap estimates of bias and
+choices. The bootstrap estimates of bias and
 variance are means over replicates and are dominated by the few replicates that
 extrapolate badly; a robust estimate (median) would separate the two effects.
 The optimizer comparison used a learning-rate grid with four values per decade
@@ -45,7 +44,7 @@ all comparisons on the held-out data rest on 20 test points, whose MSE has a
 standard error of about $30\%$ of $\sigma^2$.
 
 Two extensions follow directly. First, replacing the monomials $x^j$ by
-orthogonal polynomials (Legendre or Chebyshev) on $[-1,1]$ spans the same model
+orthogonal polynomials on $[-1,1]$ spans the same model
 space but keeps $\kappa(\bm{X})$ small; gradient descent, including the
 subgradient method for Lasso, would then converge at every degree, and the
 coefficients would become interpretable. Second, we would make the
