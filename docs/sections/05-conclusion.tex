@@ -38,16 +38,13 @@ optimizer as much as the Lasso model itself. Finally,
 all comparisons on the held-out data rest on 20 test points, whose MSE has a
 standard error of about $30\%$ of $\sigma^2$.
 
-Two extensions follow directly. First, replacing the monomials $x^j$ by
-orthogonal polynomials on $[-1,1]$ spans the same model
+Two extensions follow directly from these limitations. First, replacing the
+monomials $x^j$ by orthogonal polynomials on $[-1,1]$ spans the same model
 space but keeps $\kappa(\bm{X})$ small; gradient descent, including the
 subgradient method for Lasso, would then converge at every degree, and the
-coefficients would become interpretable. Second, we would make the
-resampling estimates less sensitive to extrapolation, for instance with the
-.632 or .632+ bootstrap estimators, which were designed to correct the
-pessimism of leave-out bootstrap estimates~\cite{hastie_2017}, by assigning
-the smallest and largest $x$ to the training part of every fold, or by
-aggregating fold errors with the median, and test whether the selected degree
-then approaches the true optimum. Both are needed before the conclusions of this
-study can be transferred to more advanced techniques such as neural networks,
-whose optimization is equally sensitive to conditioning.
+coefficients would become interpretable. Second, the resampling estimates
+could be made less sensitive to extrapolation by stratifying the folds in $x$,
+so that every training set spans the whole interval, or by using leave-one-out
+cross-validation, which for OLS follows from a single fit. Whether the selected
+degree then approaches the true optimum would show how much of the gap in
+\cref{fig:ols_estimators} is due to extrapolation.
